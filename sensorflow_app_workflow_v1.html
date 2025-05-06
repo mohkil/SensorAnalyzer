@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SensorFlow AI - Analysis Workflow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
+    <script>
+        // Function to render Lucide icons after page load or DOM updates
+        const renderLucideIcons = () => {
+            // Small delay to ensure DOM is ready after potential updates
+            setTimeout(() => {
+                if (window.lucide) {
+                    try {
+                        lucide.createIcons();
+                        console.log("Lucide icons rendered.");
+                    } catch (error) {
+                        console.error("Error rendering Lucide icons:", error);
+                    }
+                } else {
+                    console.warn("Lucide library not available yet for rendering.");
+                    // Optionally try again later
+                    // setTimeout(renderLucideIcons, 500);
+                }
+            }, 50); // 50ms delay
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            color: #1f2937;
+            padding-left: 4rem; /* Add padding for collapsed side menu */
+            transition: padding-left 0.3s ease; /* Smooth transition for padding */
+        }
+        body.menu-expanded {
+            padding-left: 16rem; /* Add padding for expanded side menu */
+        }
+
+        /* Header */
+        .app-header {
+            padding: 0.75rem 1.5rem; /* Adjusted padding */
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between; /* Space between logo and profile */
+            align-items: center;
+            position: sticky; /* Make header sticky */
+            top: 0;
+            z-index: 1010; /* Ensure header is above side menu */
+        }
+        .app-header .logo-link {
+            font-size: 1.75rem; font-weight: 800; color: #3b82f6;
+            text-decoration: none; letter-spacing: -0.5px;
+        }
+        .app-header .logo-link:hover { color: #2563eb; }
+
+        /* Profile Menu */
+        .profile-menu-container { position: relative; }
+        .profile-button {
+            width: 40px; height: 40px; border-radius: 50%; background-color: #e5e7eb;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            border: 2px solid transparent; transition: border-color 0.2s;
+        }
+        .profile-button:hover, .profile-button.active { border-color: #3b82f6; }
+        .profile-dropdown {
+            position: absolute; top: 100%; right: 0; margin-top: 0.5rem;
+            background-color: white; border-radius: 0.375rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb; z-index: 1020; width: 180px;
+            opacity: 0; visibility: hidden; transform: translateY(-10px);
+            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+        }
+        .profile-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+        .profile-dropdown a {
+            display: block; padding: 0.75rem 1rem; color: #374151;
+            text-decoration: none; font-size: 0.875rem;
+            transition: background-color 0.2s;
+        }
+        .profile-dropdown a:hover { background-color: #f3f4f6; }
+        .profile-dropdown .divider { height: 1px; background-color: #e5e7eb; margin: 0.25rem 0; }
+
+        /* Sliding History Menu */
+        .history-menu {
+            position: fixed; left: 0; top: 0; height: 100%;
+            width: 4rem; /* Collapsed width */
+            background-color: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+            overflow: hidden; /* Hide content when collapsed */
+            transition: width 0.3s ease;
+            z-index: 1000; /* Below header */
+            padding-top: 60px; /* Space for sticky header */
+            display: flex;
+            flex-direction: column; /* Stack title and list */
+        }
+        .history-menu:hover {
+            width: 16rem; /* Expanded width */
+        }
+        .history-menu-title {
+            padding: 1rem; font-weight: 600; color: #4b5563;
+            white-space: nowrap; /* Prevent wrapping */
+            opacity: 0; /* Hidden when collapsed */
+            transition: opacity 0.2s 0.1s ease; /* Delay opacity transition */
+            font-size: 0.875rem;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: center;
+        }
+        .history-menu:hover .history-menu-title {
+            opacity: 1;
+        }
+        .history-menu-list {
+            list-style: none; padding: 0; margin: 0;
+            overflow-y: auto; /* Allow scrolling if list is long */
+            flex-grow: 1; /* Take remaining space */
+            opacity: 0; /* Hidden when collapsed */
+            transition: opacity 0.2s 0.1s ease;
+        }
+        .history-menu:hover .history-menu-list {
+            opacity: 1;
+        }
+        .history-menu-list li a {
+            display: block; padding: 0.75rem 1rem; font-size: 0.8rem; color: #374151;
+            text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background-color 0.2s;
+        }
+        .history-menu-list li a:hover { background-color: #eff6ff; color: #1d4ed8; }
+        .history-menu-list li .date { display: block; font-size: 0.7rem; color: #6b7280; }
+
+        /* Wiki Button */
+        .wiki-button {
+            position: fixed; left: 0; bottom: 0;
+            width: 4rem; /* Match collapsed menu width */
+            padding: 1rem 0;
+            background-color: #ffffff;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            z-index: 1001; /* Above menu content but below header */
+            transition: width 0.3s ease;
+            cursor: pointer;
+        }
+         .history-menu:hover + .wiki-button, .wiki-button:hover { /* Expand wiki button when menu expands or on its own hover */
+             width: 16rem;
+         }
+
+        .wiki-button .icon { display: inline-block; }
+        .wiki-button .text { display: none; margin-left: 0.5rem; font-size: 0.875rem; font-weight: 500; color: #3b82f6; }
+         .history-menu:hover + .wiki-button .icon, .wiki-button:hover .icon { display: inline-block; } /* Keep icon visible */
+         .history-menu:hover + .wiki-button .text, .wiki-button:hover .text { display: inline-block; } /* Show text on hover */
+
+        /* App Container Adjustment */
+        .app-container {
+            max-width: calc(100% - 4rem); /* Adjust max-width based on collapsed menu */
+            margin: 0 auto 2rem 4rem; /* Auto centers horizontally, accounts for left padding */
+            padding: 2rem; border-radius: 0.75rem; /* Rounded all corners */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            background-color: white;
+             transition: margin-left 0.3s ease; /* Smooth transition for margin */
+        }
+         body.menu-expanded .app-container {
+             margin-left: 16rem;
+             max-width: calc(100% - 16rem);
+         }
+
+
+        /* Other styles from previous version (progress, steps, buttons, etc.) */
+        .progress-container { width: 100%; background-color: #e5e7eb; border-radius: 9999px; overflow: hidden; height: 0.75rem; margin-bottom: 1.5rem; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1); }
+        .progress-bar { height: 100%; background: linear-gradient(to right, #60a5fa, #3b82f6); width: 0%; transition: width 0.6s ease-in-out; border-radius: 9999px; }
+        .step-indicator { display: flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; border-radius: 50%; font-weight: 600; margin-right: 0.75rem; transition: background-color 0.3s, color 0.3s, border-color 0.3s; border: 2px solid transparent; }
+        .step-active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
+        .step-inactive { background-color: #f3f4f6; color: #4b5563; border-color: #d1d5db; }
+        .step-complete { background-color: #10b981; color: white; border-color: #10b981; }
+        button:disabled, input:disabled + span { opacity: 0.6; cursor: not-allowed; }
+        input:disabled { cursor: not-allowed; }
+        .tooltip { position: relative; display: inline-block; cursor: help; }
+        .tooltip .tooltiptext { visibility: hidden; width: 250px; background-color: #374151; color: #fff; text-align: left; border-radius: 6px; padding: 8px 12px; position: absolute; z-index: 10; bottom: 130%; left: 50%; margin-left: -125px; opacity: 0; transition: opacity 0.3s; font-size: 0.75rem; font-weight: normal; line-height: 1.4; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .tooltip .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #374151 transparent transparent transparent; }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+        input[type="file"]::file-selector-button { margin-right: 0.75rem; padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.375rem; background-color: #fff; color: #374151; cursor: pointer; transition: background-color 0.2s, border-color 0.2s; font-weight: 500; }
+        input[type="file"]::file-selector-button:hover { background-color: #f9fafb; border-color: #9ca3af; }
+        input[type="checkbox"]:checked + span, input[type="radio"]:checked + span { border-color: #3b82f6; background-color: #eff6ff; box-shadow: 0 1px 3px 0 rgba(59, 130, 246, 0.3); }
+        label > span:not(.tooltip) { transition: transform 0.2s ease-out, box-shadow 0.2s ease-out; }
+        label:hover > span:not(.tooltip) { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .lucide { display: inline-block; vertical-align: middle; }
+        .feedback-message { padding: 0.75rem 1rem; margin-bottom: 1rem; border-radius: 0.375rem; font-size: 0.875rem; display: flex; align-items: center; }
+        .feedback-success { background-color: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+        .feedback-info { background-color: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+        .feedback-error { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .step-section { margin-bottom: 2rem; padding: 1.5rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; background-color: #ffffff; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .action-button { display: inline-flex; align-items: center; padding: 0.6rem 1.2rem; border: 1px solid transparent; font-size: 0.875rem; font-weight: 500; border-radius: 0.375rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); transition: background-color 0.2s, box-shadow 0.2s, transform 0.1s; cursor: pointer; }
+        .action-button:hover { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); transform: translateY(-1px); }
+        .button-primary { color: white; background-color: #3b82f6; border-color: #3b82f6; }
+        .button-primary:hover { background-color: #2563eb; }
+        .button-secondary { color: #374151; background-color: #ffffff; border: 1px solid #d1d5db; }
+        .button-secondary:hover { background-color: #f9fafb; }
+        .button-start-over { color: white; background-color: #4b5563; border-color: #4b5563; }
+        .button-start-over:hover { background-color: #374151; }
+        .button-back { color: #4b5563; background-color: #f3f4f6; border: 1px solid #d1d5db; }
+        .button-back:hover { background-color: #e5e7eb; }
+
+    </style>
+</head>
+<body>
+    <aside id="history-menu" class="history-menu">
+        <div class="history-menu-title">Analysis History</div>
+        <ul class="history-menu-list">
+            <li><a href="#"><span class="font-medium">Prediction - Sensor A</span><span class="date">May 6, 2025</span></a></li>
+            <li><a href="#"><span class="font-medium">Classification - Exp X</span><span class="date">May 4, 2025</span></a></li>
+            <li><a href="#"><span class="font-medium">Anomaly Detection - Unit 3</span><span class="date">May 1, 2025</span></a></li>
+            <li><a href="#"><span class="font-medium">Pattern Analysis - Dataset Y</span><span class="date">Apr 28, 2025</span></a></li>
+            <li><a href="#"><span class="font-medium">Prediction - Sensor B</span><span class="date">Apr 25, 2025</span></a></li>
+            </ul>
+    </aside>
+
+     <div id="wiki-button" class="wiki-button">
+        <span class="icon">
+            <svg data-lucide="book-open-text" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-open-text text-blue-600"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/><path d="M6 8h2"/><path d="M6 12h2"/><path d="M16 8h2"/><path d="M16 12h2"/></svg>
+        </span>
+        <span class="text">Help / Wiki</span>
+    </div>
+
+
+    <header class="app-header">
+        <a href="sensorflow_landing_page_v1.html" class="logo-link">SensorFlow AI</a>
+        <div class="profile-menu-container">
+            <button id="profile-menu-button" class="profile-button" aria-label="User menu" aria-haspopup="true" aria-expanded="false">
+                <svg data-lucide="user" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user text-gray-600"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </button>
+            <div id="profile-dropdown" class="profile-dropdown" role="menu" aria-orientation="vertical" aria-labelledby="profile-menu-button">
+                <a href="#" role="menuitem">Profile</a>
+                <a href="#" role="menuitem">Settings</a>
+                <div class="divider" role="separator"></div>
+                <a href="#" id="logout-button" role="menuitem">Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <div id="app-main-container" class="app-container">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4 text-center">Your Sensor Data Quest!</h1>
+        <p class="text-gray-600 mb-6 text-center">Let's turn your sensor data into valuable insights for your research.</p>
+
+        <div class="progress-container">
+            <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        <div id="progress-text" class="text-center text-sm text-gray-500 mb-8">Step 1 of 6: Prepare Your Data</div>
+
+        <div id="step1" class="step-section">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+                <span id="step1-indicator" class="step-indicator step-active">1</span> Prepare Your Data
+            </h2>
+            <p class="text-sm text-gray-500 mb-4">First, let's get your sensor readings. Upload a CSV or XLSX file.</p>
+            <div class="mb-4">
+                <label for="file-upload" class="block text-sm font-medium text-gray-700 mb-1">Select File:</label>
+                <input type="file" id="file-upload" name="file-upload" accept=".csv,.xlsx" class="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border file:border-gray-300 file:text-sm file:font-semibold file:bg-white file:text-gray-700 hover:file:bg-gray-50 hover:file:border-gray-400 cursor-pointer">
+            </div>
+            <div id="file-feedback" class="feedback-message feedback-info hidden">
+                <svg data-lucide="file-check-2" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-check-2 mr-2"><path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M3 15v-1a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1"/><path d="m3 20 2-2 4 4L15 16"/></svg>
+                <span id="file-feedback-text">File selected!</span>
+            </div>
+            <div id="data-preview-container" class="mt-4 hidden">
+                <h3 class="text-md font-medium text-gray-700 mb-2">Quick Peek (First 5 Rows):</h3>
+                <div class="overflow-x-auto border border-gray-200 rounded-md">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" id="preview-col1-header">Timestamp/Feature1</th>
+                                <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" id="preview-col2-header">Value/Feature2</th>
+                                <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden" id="preview-col3-header">Target (for Classification)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="data-preview-body">
+                            <tr><td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">2025-01-01 00:00:00</td><td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">25.3</td><td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 hidden">-</td></tr>
+                            <tr><td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">2025-01-01 00:01:00</td><td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">25.4</td><td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 hidden">-</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                 <p class="text-xs text-gray-500 mt-2">For Classification, ensure your target variable/column is present in the data.</p>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button id="next-step1" class="action-button button-primary" disabled>
+                    Confirm Data & Continue
+                    <svg data-lucide="arrow-right" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="step2" class="step-section hidden">
+             <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+                <span id="step2-indicator" class="step-indicator step-inactive">2</span> Define Analysis Type
+            </h2>
+            <p class="text-sm text-gray-500 mb-4">What kind of story does your data tell?</p>
+            <div id="analysis-type-selection" class="space-y-3">
+                </div>
+            <div class="mt-6 flex justify-between">
+                <button class="action-button button-back back-button" data-targetstep="1">
+                    <svg data-lucide="arrow-left" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    Back
+                </button>
+                <button id="next-step2" class="action-button button-primary" disabled>
+                    Set Analysis Type & Proceed
+                    <svg data-lucide="arrow-right" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="step3" class="step-section hidden">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+                 <span id="step3-indicator" class="step-indicator step-inactive">3</span> Choose Your Path
+            </h2>
+            <p class="text-sm text-gray-600 mb-4">Ready to choose your tools or need a guide?</p>
+            <div id="expertise-selection" class="space-y-3">
+                </div>
+            <div class="mt-6 flex justify-between">
+                 <button class="action-button button-back back-button" data-targetstep="2">
+                    <svg data-lucide="arrow-left" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    Back
+                </button>
+                <button id="next-step3" class="action-button button-primary" disabled>
+                    Choose Path & Configure
+                    <svg data-lucide="arrow-right" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="step4" class="step-section hidden">
+             <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+                 <span id="step4-indicator" class="step-indicator step-inactive">4</span> Configure Your Analysis
+            </h2>
+            <div id="model-selection-area" class="hidden">
+                <h3 class="text-md font-medium text-gray-700 mb-3">Select AI Models (Up to 3)</h3>
+                <p class="text-sm text-gray-500 mb-4">Choose models for <span id="model-analysis-type-text" class="font-semibold">your analysis</span>.</p>
+                <div id="model-selection-container" class="space-y-4">
+                    <div id="timeseries-models" class="space-y-4">
+                        <label class="block cursor-pointer ts-model-label"><input type="checkbox" name="ai-model" value="LSTM" class="hidden peer model-checkbox"><span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center justify-between p-4 border border-gray-300 rounded-md hover:bg-gray-50"><span class="flex items-center text-sm font-medium text-gray-700">LSTM<span class="block text-xs text-gray-500 ml-2">(Complex patterns)</span></span><span class="tooltip ml-2"><svg data-lucide="info" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info text-gray-400"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span class="tooltiptext"><strong>Pros:</strong> Long-term dependencies.<br><strong>Cons:</strong> Computationally intensive.</span></span></span></label>
+                        <label class="block cursor-pointer ts-model-label"><input type="checkbox" name="ai-model" value="ARIMA" class="hidden peer model-checkbox"><span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center justify-between p-4 border border-gray-300 rounded-md hover:bg-gray-50"><span class="flex items-center text-sm font-medium text-gray-700">ARIMA<span class="block text-xs text-gray-500 ml-2">(Statistical model)</span></span><span class="tooltip ml-2"><svg data-lucide="info" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info text-gray-400"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span class="tooltiptext"><strong>Pros:</strong> Efficient, stationary data.<br><strong>Cons:</strong> Assumes linearity.</span></span></span></label>
+                        <label class="block cursor-pointer ts-model-label"><input type="checkbox" name="ai-model" value="Prophet" class="hidden peer model-checkbox"><span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center justify-between p-4 border border-gray-300 rounded-md hover:bg-gray-50"><span class="flex items-center text-sm font-medium text-gray-700">Prophet<span class="block text-xs text-gray-500 ml-2">(Seasonality)</span></span><span class="tooltip ml-2"><svg data-lucide="info" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info text-gray-400"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span class="tooltiptext"><strong>Pros:</strong> Handles seasonality well.<br><strong>Cons:</strong> Less flexible.</span></span></span></label>
+                    </div>
+                    <div id="classification-models" class="space-y-4 hidden">
+                        <label class="block cursor-pointer cl-model-label"><input type="checkbox" name="ai-model" value="LogisticRegression" class="hidden peer model-checkbox"><span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center justify-between p-4 border border-gray-300 rounded-md hover:bg-gray-50"><span class="flex items-center text-sm font-medium text-gray-700">Logistic Regression<span class="block text-xs text-gray-500 ml-2">(Linear classifier)</span></span><span class="tooltip ml-2"><svg data-lucide="info" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info text-gray-400"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span class="tooltiptext"><strong>Pros:</strong> Fast, interpretable.<br><strong>Cons:</strong> Assumes linearity.</span></span></span></label>
+                        <label class="block cursor-pointer cl-model-label"><input type="checkbox" name="ai-model" value="RandomForest" class="hidden peer model-checkbox"><span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center justify-between p-4 border border-gray-300 rounded-md hover:bg-gray-50"><span class="flex items-center text-sm font-medium text-gray-700">Random Forest<span class="block text-xs text-gray-500 ml-2">(Decision trees)</span></span><span class="tooltip ml-2"><svg data-lucide="info" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info text-gray-400"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span class="tooltiptext"><strong>Pros:</strong> Non-linearity, robust.<br><strong>Cons:</strong> Less interpretable.</span></span></span></label>
+                        <label class="block cursor-pointer cl-model-label"><input type="checkbox" name="ai-model" value="SVM" class="hidden peer model-checkbox"><span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center justify-between p-4 border border-gray-300 rounded-md hover:bg-gray-50"><span class="flex items-center text-sm font-medium text-gray-700">SVM<span class="block text-xs text-gray-500 ml-2">(Optimal hyperplane)</span></span><span class="tooltip ml-2"><svg data-lucide="info" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info text-gray-400"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span class="tooltiptext"><strong>Pros:</strong> High dimensions, memory efficient.<br><strong>Cons:</strong> Slow, kernel sensitive.</span></span></span></label>
+                    </div>
+                </div>
+            </div>
+            <div id="goal-selection-area" class="hidden">
+                 <h3 class="text-md font-medium text-gray-700 mb-3">Select Your Analysis Goal</h3>
+                 <p class="text-sm text-gray-500 mb-4">What to achieve with your <span id="goal-analysis-type-text" class="font-semibold">data</span>?</p>
+                 <div id="goal-selection-container" class="space-y-3">
+                     <div id="timeseries-goals" class="space-y-3">
+                         <label class="block cursor-pointer ts-goal-label"><input type="radio" name="analysis-goal" value="predict" class="hidden peer goal-radio"><span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center p-4 border border-gray-300 rounded-md hover:bg-gray-50"><svg data-lucide="line-chart" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-line-chart mr-3 text-blue-600"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg><span class="block text-sm font-medium text-gray-700">Predict Future Values<span class="block text-xs text-gray-500">Forecast readings.</span></span></span></label>
+                         <label class="block cursor-pointer ts-goal-label"><input type="radio" name="analysis-goal" value="anomaly" class="hidden peer goal-radio"><span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center p-4 border border-gray-300 rounded-md hover:bg-gray-50"><svg data-lucide="alert-triangle" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-alert-triangle mr-3 text-blue-600"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span class="block text-sm font-medium text-gray-700">Detect Anomalies<span class="block text-xs text-gray-500">Identify outliers.</span></span></span></label>
+                         <label class="block cursor-pointer ts-goal-label"><input type="radio" name="analysis-goal" value="pattern" class="hidden peer goal-radio"><span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center p-4 border border-gray-300 rounded-md hover:bg-gray-50"><svg data-lucide="area-chart" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-area-chart mr-3 text-blue-600"><path d="M3 3v18h18"/><path d="M7 12v5h12V8l-5 5-4-4Z"/></svg><span class="block text-sm font-medium text-gray-700">Find Patterns / Trends<span class="block text-xs text-gray-500">Discover trends.</span></span></span></label>
+                    </div>
+                     <div id="classification-goals" class="space-y-3 hidden">
+                         <label class="block cursor-pointer cl-goal-label"><input type="radio" name="analysis-goal" value="categorize" class="hidden peer goal-radio"><span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center p-4 border border-gray-300 rounded-md hover:bg-gray-50"><svg data-lucide="tags" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tags mr-3 text-blue-600"><path d="M9 5H2v7l6.29 6.29c.94.94 2.48.94 3.42 0l3.58-3.58c.94-.94.94-2.48 0-3.42L9 5Z"/><path d="M6 9.01V9"/><path d="m15 5 6.3 6.3a2.66 2.66 0 0 1 0 3.76l-3.58 3.58a2.66 2.66 0 0 1-3.76 0L12 17"/></svg><span class="block text-sm font-medium text-gray-700">Categorize Data Points<span class="block text-xs text-gray-500">Assign to groups.</span></span></span></label>
+                         <label class="block cursor-pointer cl-goal-label"><input type="radio" name="analysis-goal" value="predict_category" class="hidden peer goal-radio"><span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center p-4 border border-gray-300 rounded-md hover:bg-gray-50"><svg data-lucide="box-select" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-box-select mr-3 text-blue-600"><path d="M5 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"/><path d="m9 3 1 7 3-5 3 5 1-7"/><path d="M3 11h18"/><path d="M10 16v-3"/><path d="M14 16v-3"/></svg><span class="block text-sm font-medium text-gray-700">Predict Category<span class="block text-xs text-gray-500">Predict group for new data.</span></span></span></label>
+                     </div>
+                 </div>
+            </div>
+            <div id="config-options" class="mt-6 border-t border-gray-200 pt-4">
+                 <h3 class="text-md font-medium text-gray-700 mb-2">Fine-tune (Optional)</h3>
+                 <div id="predict-config-options" class="space-y-3 hidden"><label for="predict-steps" class="block text-sm font-medium text-gray-700">Prediction Horizon:<span class="tooltip ml-1"><svg data-lucide="info" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info inline-block text-gray-400"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span class="tooltiptext">Future time steps to forecast.</span></span></label><input type="number" id="predict-steps" name="predict-steps" value="10" min="1" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></div>
+                 <div id="classification-config-options" class="space-y-3 hidden"><p class="text-sm text-gray-500">Classification config options (e.g., target column name if not auto-detected).</p></div>
+                 <div id="no-config-message" class="text-sm text-gray-500">No specific configuration needed.</div>
+            </div>
+            <div class="mt-6 flex justify-between">
+                <button class="action-button button-back back-button" data-targetstep="3">
+                    <svg data-lucide="arrow-left" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    Back
+                </button>
+                <button id="next-step4" class="action-button button-primary" disabled>
+                    Launch Analysis!
+                    <svg data-lucide="rocket" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rocket ml-2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.3.09-3.1a2.18 2.18 0 0 0-3.18 0c-.78.8-.79 2.29-.11 3.11Z"/><path d="M15.5 2.5c1.26 1.5 5 2 5 2s-.5 3.74-2 5c-.84.71-2.3.7-3.1.09a2.18 2.18 0 0 1 0-3.18c.8-.78 2.29-.79 3.11-.11Z"/><path d="M10.5 15.5L6 20l5-5.5L15.5 10l5.5-5-4.5 6Z"/><path d="M14.5 6.5L18 3l-5.5 5.5L7 12.5 2 18l6 4.5Z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="step5" class="step-section hidden">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+                 <span id="step5-indicator" class="step-indicator step-inactive">5</span> Processing Your Data...
+            </h2>
+            <div id="analysis-feedback" class="feedback-message feedback-info mb-4">
+                <svg data-lucide="loader-2" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-loader-2 animate-spin mr-2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                <span id="analysis-feedback-text">Running models. This might take a moment...</span>
+            </div>
+            <div class="progress-bar-container mb-4"><div id="analysis-progress-bar" class="progress-bar" style="width: 0%;"></div></div>
+             <div class="mt-6 flex justify-start">
+                <button class="action-button button-back back-button" data-targetstep="4">
+                    <svg data-lucide="arrow-left" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    Back to Configuration
+                </button>
+            </div>
+        </div>
+
+        <div id="step6" class="step-section hidden">
+            <h2 id="results-title" class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+                 <span id="step6-indicator" class="step-indicator step-inactive">6</span> Discover Your Insights!
+            </h2>
+             <div id="results-feedback" class="feedback-message feedback-success mb-4">
+                <svg data-lucide="party-popper" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-party-popper mr-2"><path d="M5.8 11.3 2 22l10.7-3.79"/><path d="M4 14.8 8 12"/><path d="m14 4 1 4 4-1"/><path d="M10.1 5.3 14 2l3.73 10.7"/><path d="M18.7 13.9 22 10l-10.7 3.73"/><path d="M19.6 18 16 14"/><path d="M14.8 4 18 8"/></svg>
+                Analysis complete! Check out the results below.
+            </div>
+            <div class="mb-6"><h3 class="text-lg font-medium text-gray-800 mb-3">Visualizations</h3><div id="results-chart" class="w-full h-64 md:h-96 bg-gray-100 border border-gray-200 rounded-md flex items-center justify-center text-gray-500">[Chart Placeholder]</div></div>
+            <div class="mb-6"><h3 class="text-lg font-medium text-gray-800 mb-3">Key Metrics</h3><div id="metrics-container" class="overflow-x-auto border border-gray-200 rounded-md"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50" id="metrics-table-head"></thead><tbody class="bg-white divide-y divide-gray-200" id="metrics-table-body"><tr id="metrics-placeholder-row"><td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">Metrics will appear here.</td></tr></tbody></table></div><p id="metrics-note" class="text-xs text-gray-500 mt-2">Metrics depend on analysis performed.</p></div>
+            <div class="mb-6"><h3 class="text-lg font-medium text-gray-800 mb-3">Publication Summary</h3><div class="p-4 bg-gray-50 border border-gray-200 rounded-md"><p id="publication-summary" class="text-sm text-gray-700 leading-relaxed">[Auto-generated summary...]</p></div><button id="copy-summary" class="action-button button-secondary mt-3"><svg data-lucide="copy" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy mr-2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>Copy Summary</button><span id="copy-feedback" class="text-sm text-green-600 ml-3 hidden">Copied!</span></div>
+            <div class="mt-8 border-t border-gray-200 pt-6">
+                <h3 class="text-lg font-medium text-gray-800 mb-3">Export Your Findings</h3>
+                <div class="flex flex-wrap gap-3">
+                    <button id="export-docx" class="action-button button-secondary"><svg data-lucide="file-text" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text mr-2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>Export Analysis (DOCX)</button>
+                    <button id="export-data" class="action-button button-secondary"><svg data-lucide="table-2" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-table-2 mr-2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0-18H5m0 5h16m0 0V5m0 0v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5m6 6h10m-5 0v9"/></svg>Export Processed Data (CSV/XLSX)</button>
+                </div>
+            </div>
+            <div class="mt-8 flex justify-between">
+                 <button class="action-button button-back back-button" data-targetstep="4">
+                    <svg data-lucide="arrow-left" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    Back to Configuration
+                </button>
+                <button id="start-over" class="action-button button-start-over">
+                    <svg data-lucide="rotate-ccw" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw mr-2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    Start New Quest
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Constants ---
+        const MAX_MODELS = 3;
+        const TOTAL_STEPS = 6;
+
+        // --- DOM Elements ---
+        const appMainContainer = document.getElementById('app-main-container');
+        const progressBarEl = document.getElementById('progress-bar');
+        const progressTextEl = document.getElementById('progress-text');
+        const profileMenuButton = document.getElementById('profile-menu-button');
+        const profileDropdown = document.getElementById('profile-dropdown');
+        const historyMenu = document.getElementById('history-menu');
+        const wikiButton = document.getElementById('wiki-button');
+        const bodyElement = document.body;
+
+        const stepSections = {
+            1: document.getElementById('step1'), 2: document.getElementById('step2'),
+            3: document.getElementById('step3'), 4: document.getElementById('step4'),
+            5: document.getElementById('step5'), 6: document.getElementById('step6'),
+        };
+        const stepIndicators = {
+            1: document.getElementById('step1-indicator'), 2: document.getElementById('step2-indicator'),
+            3: document.getElementById('step3-indicator'), 4: document.getElementById('step4-indicator'),
+            5: document.getElementById('step5-indicator'), 6: document.getElementById('step6-indicator'),
+        };
+
+        // Step 1
+        const fileUpload = document.getElementById('file-upload');
+        const fileFeedback = document.getElementById('file-feedback');
+        const fileFeedbackText = document.getElementById('file-feedback-text');
+        const dataPreviewContainer = document.getElementById('data-preview-container');
+        const dataPreviewBody = document.getElementById('data-preview-body');
+        const previewCol3Header = document.getElementById('preview-col3-header');
+        const nextStep1Button = document.getElementById('next-step1');
+
+        // Step 2
+        const analysisTypeSelectionDiv = document.getElementById('analysis-type-selection');
+        let analysisTypeRadios;
+        const nextStep2Button = document.getElementById('next-step2');
+
+        // Step 3
+        const expertiseSelectionDiv = document.getElementById('expertise-selection');
+        let expertiseRadios;
+        const nextStep3Button = document.getElementById('next-step3');
+
+        // Step 4
+        const modelSelectionArea = document.getElementById('model-selection-area');
+        const goalSelectionArea = document.getElementById('goal-selection-area');
+        const modelAnalysisTypeText = document.getElementById('model-analysis-type-text');
+        const goalAnalysisTypeText = document.getElementById('goal-analysis-type-text');
+        const tsModelsDiv = document.getElementById('timeseries-models');
+        const clModelsDiv = document.getElementById('classification-models');
+        const tsGoalsDiv = document.getElementById('timeseries-goals');
+        const clGoalsDiv = document.getElementById('classification-goals');
+        let modelCheckboxes;
+        let goalRadios;
+        const configOptionsDiv = document.getElementById('config-options');
+        const predictConfigOptions = document.getElementById('predict-config-options');
+        const classificationConfigOptions = document.getElementById('classification-config-options');
+        const noConfigMessage = document.getElementById('no-config-message');
+        const predictStepsInput = document.getElementById('predict-steps');
+        const nextStep4Button = document.getElementById('next-step4');
+
+        // Step 5
+        const analysisFeedback = document.getElementById('analysis-feedback');
+        const analysisFeedbackText = document.getElementById('analysis-feedback-text');
+        const analysisProgressBar = document.getElementById('analysis-progress-bar');
+
+        // Step 6
+        const resultsTitle = document.getElementById('results-title');
+        const resultsChart = document.getElementById('results-chart');
+        const metricsTableHead = document.getElementById('metrics-table-head');
+        const metricsTableBody = document.getElementById('metrics-table-body');
+        let metricsPlaceholderRow = document.getElementById('metrics-placeholder-row');
+        const metricsNote = document.getElementById('metrics-note');
+        const publicationSummary = document.getElementById('publication-summary');
+        const copySummaryButton = document.getElementById('copy-summary');
+        const copyFeedback = document.getElementById('copy-feedback');
+        const exportDocxButton = document.getElementById('export-docx');
+        const exportDataButton = document.getElementById('export-data');
+        const startOverButton = document.getElementById('start-over');
+        const allBackButtons = document.querySelectorAll('.back-button');
+        const logoutButton = document.getElementById('logout-button');
+
+
+        // --- State Variables ---
+        let currentStep = 1;
+        let analysisType = null;
+        let analysisApproach = null;
+        let selectedModels = [];
+        let selectedGoal = null;
+
+        // --- Dynamic Content Population ---
+        function populateStep2Options() {
+            analysisTypeSelectionDiv.innerHTML = `
+                <label class="block cursor-pointer">
+                    <input type="radio" name="analysis-type" value="timeseries" class="hidden peer analysis-type-radio">
+                    <span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center p-4 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-150">
+                        <svg data-lucide="trending-up" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trending-up mr-3 text-blue-600"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                        <span class="block text-sm font-medium text-gray-700">Time Series Analysis<span class="block text-xs text-gray-500">Analyze trends, predict, or find anomalies over time.</span></span>
+                    </span>
+                </label>
+                <label class="block cursor-pointer">
+                    <input type="radio" name="analysis-type" value="classification" class="hidden peer analysis-type-radio">
+                    <span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center p-4 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-150">
+                        <svg data-lucide="layout-grid" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-grid mr-3 text-blue-600"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/></svg>
+                        <span class="block text-sm font-medium text-gray-700">Classification Analysis<span class="block text-xs text-gray-500">Categorize data into predefined groups.</span></span>
+                    </span>
+                </label>`;
+            analysisTypeRadios = document.querySelectorAll('.analysis-type-radio');
+            analysisTypeRadios.forEach(addAnalysisTypeRadioListener);
+        }
+
+        function populateStep3Options() {
+            expertiseSelectionDiv.innerHTML = `
+                <label class="block cursor-pointer">
+                    <input type="radio" name="expertise-level" value="advanced" class="hidden peer expertise-radio">
+                    <span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center p-4 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-150">
+                        <svg data-lucide="list-checks" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list-checks mr-3 text-blue-600"><path d="M14 9.5 17 12l3-2.5"/><path d="m3 12 3 2.5 4-5"/><path d="m3 5 3 2.5 4-5"/><path d="M3 19l3 2.5 4-5"/></svg>
+                        <span class="block text-sm font-medium text-gray-700">Expert Path: Select AI models<span class="block text-xs text-gray-500">Choose up to 3 models manually.</span></span>
+                    </span>
+                </label>
+                <label class="block cursor-pointer">
+                    <input type="radio" name="expertise-level" value="beginner" class="hidden peer expertise-radio">
+                    <span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center p-4 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-150">
+                         <svg data-lucide="navigation" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-navigation mr-3 text-blue-600"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                        <span class="block text-sm font-medium text-gray-700">Guided Path: Select analysis goal<span class="block text-xs text-gray-500">Choose what you want to achieve. (Recommended)</span></span>
+                    </span>
+                </label>`;
+            expertiseRadios = document.querySelectorAll('.expertise-radio');
+            expertiseRadios.forEach(addExpertiseRadioListener);
+        }
+
+        // --- Main Functions ---
+        function updateProgress(step) {
+            currentStep = step;
+            const progressPercentage = ((step - 1) / (TOTAL_STEPS -1)) * 100;
+            progressBarEl.style.width = `${progressPercentage}%`;
+
+            for (let i = 1; i <= TOTAL_STEPS; i++) {
+                const indicator = stepIndicators[i];
+                if (indicator) {
+                    indicator.classList.remove('step-active', 'step-inactive', 'step-complete');
+                    indicator.innerHTML = i;
+                    if (i < step) {
+                        indicator.classList.add('step-complete');
+                        indicator.innerHTML = `<svg data-lucide="check" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check"><path d="M20 6 9 17l-5-5"/></svg>`;
+                    } else if (i === step) {
+                        indicator.classList.add('step-active');
+                    } else {
+                        indicator.classList.add('step-inactive');
+                    }
+                }
+            }
+            const stepTitles = {1: "Prepare Your Data", 2: "Define Analysis Type", 3: "Choose Your Path", 4: "Configure Analysis", 5: "Processing...", 6: "Discover Insights!"};
+            progressTextEl.textContent = `Step ${step} of ${TOTAL_STEPS}: ${stepTitles[step] || ''}`;
+
+            for (const key in stepSections) {
+                stepSections[key].classList.toggle('hidden', parseInt(key) !== step);
+            }
+             // Ensure Lucide icons are rendered after potential DOM changes
+            renderLucideIcons();
+            window.scrollTo(0, 0);
+        }
+
+        allBackButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetStep = parseInt(button.dataset.targetstep);
+                updateProgress(targetStep);
+            });
+        });
+
+        fileUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file && (file.name.endsWith('.csv') || file.name.endsWith('.xlsx'))) {
+                fileFeedbackText.textContent = `Great! File "${file.name}" selected.`;
+                fileFeedback.classList.remove('hidden', 'feedback-info', 'feedback-error');
+                fileFeedback.classList.add('feedback-success');
+                nextStep1Button.disabled = false;
+                dataPreviewContainer.classList.remove('hidden');
+                previewCol3Header.classList.toggle('hidden', analysisType !== 'classification');
+                 renderLucideIcons(); // Re-render icons if feedback icon changed
+            } else {
+                fileFeedbackText.textContent = 'Please select a valid CSV or XLSX file.';
+                fileFeedback.classList.remove('hidden', 'feedback-success', 'feedback-info');
+                fileFeedback.classList.add('feedback-error');
+                nextStep1Button.disabled = true;
+                dataPreviewContainer.classList.add('hidden');
+                 renderLucideIcons();
+            }
+        });
+        nextStep1Button.addEventListener('click', () => updateProgress(2));
+
+        function addAnalysisTypeRadioListener(radio) {
+            radio.addEventListener('change', () => {
+                analysisType = radio.value;
+                nextStep2Button.disabled = false;
+                resetExpertiseAndBelow();
+                previewCol3Header.classList.toggle('hidden', analysisType !== 'classification');
+            });
+        }
+        nextStep2Button.addEventListener('click', () => updateProgress(3));
+
+        function addExpertiseRadioListener(radio) {
+            radio.addEventListener('change', () => {
+                analysisApproach = radio.value;
+                nextStep3Button.disabled = false;
+                resetModelAndGoalSelections();
+                nextStep4Button.disabled = true;
+            });
+        }
+        nextStep3Button.addEventListener('click', () => {
+             updateProgress(4);
+             prepareStep4();
+         });
+
+        function prepareStep4() {
+            [modelSelectionArea, goalSelectionArea, tsModelsDiv, clModelsDiv, tsGoalsDiv, clGoalsDiv, predictConfigOptions, classificationConfigOptions, noConfigMessage].forEach(el => el.classList.add('hidden'));
+            modelCheckboxes = document.querySelectorAll('.model-checkbox');
+            goalRadios = document.querySelectorAll('.goal-radio');
+
+            if (analysisApproach === 'advanced') {
+                modelSelectionArea.classList.remove('hidden');
+                modelAnalysisTypeText.textContent = analysisType === 'timeseries' ? 'Time Series analysis' : 'Classification analysis';
+                if (analysisType === 'timeseries') tsModelsDiv.classList.remove('hidden'); else clModelsDiv.classList.remove('hidden');
+                predictConfigOptions.classList.remove('hidden');
+                classificationConfigOptions.classList.remove('hidden');
+                noConfigMessage.classList.add('hidden');
+            } else {
+                goalSelectionArea.classList.remove('hidden');
+                goalAnalysisTypeText.textContent = analysisType === 'timeseries' ? 'Time Series data' : 'Classification data';
+                if (analysisType === 'timeseries') tsGoalsDiv.classList.remove('hidden'); else clGoalsDiv.classList.remove('hidden');
+            }
+            modelCheckboxes.forEach(addModelCheckboxListener);
+            goalRadios.forEach(addGoalRadioListener);
+             renderLucideIcons(); // Render icons in the newly shown section
+        }
+
+        function addModelCheckboxListener(checkbox) {
+            checkbox.addEventListener('change', () => {
+                updateSelectedModels();
+                checkModelSelectionLimit();
+                nextStep4Button.disabled = selectedModels.length === 0;
+            });
+        }
+        function addGoalRadioListener(radio) {
+            radio.addEventListener('change', () => {
+                selectedGoal = radio.value;
+                nextStep4Button.disabled = false;
+                const isPredictGoal = selectedGoal === 'predict';
+                const isClassifyGoal = ['categorize', 'predict_category'].includes(selectedGoal);
+                predictConfigOptions.classList.toggle('hidden', !isPredictGoal);
+                classificationConfigOptions.classList.toggle('hidden', !isClassifyGoal);
+                noConfigMessage.classList.toggle('hidden', isPredictGoal || isClassifyGoal);
+                 renderLucideIcons(); // Render icons if config section changes
+            });
+        }
+
+        function resetExpertiseAndBelow() {
+            analysisApproach = null;
+            if(expertiseRadios) expertiseRadios.forEach(r => r.checked = false);
+            if(nextStep3Button) nextStep3Button.disabled = true;
+            resetModelAndGoalSelections();
+        }
+        function resetModelAndGoalSelections() {
+            selectedModels = [];
+            if(modelCheckboxes) modelCheckboxes.forEach(cb => { cb.checked = false; cb.disabled = false; const label = cb.closest('label'); if(label) label.classList.remove('opacity-50', 'cursor-not-allowed'); });
+            selectedGoal = null;
+            if(goalRadios) goalRadios.forEach(rb => rb.checked = false);
+            [predictConfigOptions, classificationConfigOptions, noConfigMessage].forEach(el => el.classList.add('hidden'));
+            if(nextStep4Button) nextStep4Button.disabled = true;
+        }
+
+        function updateSelectedModels() {
+            selectedModels = Array.from(document.querySelectorAll('.model-checkbox:checked')).map(cb => cb.value);
+        }
+
+        function checkModelSelectionLimit() {
+            const checkedCount = selectedModels.length;
+            const relevantCheckboxesQuery = analysisType === 'timeseries' ? '#timeseries-models .model-checkbox' : '#classification-models .model-checkbox';
+            document.querySelectorAll(relevantCheckboxesQuery).forEach(cb => {
+                const label = cb.closest('label');
+                if (!cb.checked && checkedCount >= MAX_MODELS) {
+                    cb.disabled = true;
+                    if(label) label.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    cb.disabled = false;
+                     if(label) label.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            });
+        }
+
+        nextStep4Button.addEventListener('click', () => {
+            let proceed = (analysisApproach === 'advanced' && selectedModels.length > 0) || (analysisApproach === 'beginner' && selectedGoal);
+            if (proceed) {
+                updateProgress(5);
+                simulateAnalysisProgress();
+            } else {
+                alert("Please complete your selection.");
+            }
+        });
+
+        function simulateAnalysisProgress() {
+            let progress = 0;
+            analysisProgressBar.style.width = '0%';
+            analysisFeedbackText.textContent = "Warming up the AI engines...";
+            const durationFactor = (analysisApproach === 'advanced' && selectedModels.length > 0) ? selectedModels.length : 1.5;
+            const totalDuration = (Math.random() * 1500 + 1000) * durationFactor;
+            const intervalTime = 50;
+            const steps = totalDuration / intervalTime;
+            let currentStepCount = 0;
+            const interval = setInterval(() => {
+                currentStepCount++;
+                progress = (currentStepCount / steps) * 100;
+                if (progress > 30 && progress < 70) analysisFeedbackText.textContent = "Analyzing patterns and trends...";
+                else if (progress >= 70) analysisFeedbackText.textContent = "Generating insights and summaries...";
+                if (progress >= 100) {
+                    progress = 100; clearInterval(interval); analysisProgressBar.style.width = '100%';
+                    setTimeout(() => { updateProgress(6); displayMockResults(); }, 400);
+                }
+                analysisProgressBar.style.width = progress + '%';
+            }, intervalTime);
+        }
+
+        function displayMockResults() {
+            metricsTableBody.innerHTML = '';
+            const existingPlaceholder = document.getElementById('metrics-placeholder-row');
+            if (existingPlaceholder) existingPlaceholder.remove();
+
+            let summary = ''; let chartText = '[Chart Placeholder]';
+            if (analysisApproach === 'advanced') {
+                resultsTitle.innerHTML = `<span id="step6-indicator" class="step-indicator step-complete"><svg data-lucide="check" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check"><path d="M20 6 9 17l-5-5"/></svg></span> Comparative Model Insights`;
+                chartText = `Mock Comparative Chart (${selectedModels.join(', ')})`;
+                metricsNote.textContent = `Note: Metrics shown are for ${analysisType} analysis.`;
+                let headers = analysisType === 'timeseries' ? `<tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Model</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">RMSE</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">MAE</th></tr>` : `<tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Model</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Accuracy</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Precision</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Recall</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">F1-Score</th></tr>`;
+                metricsTableHead.innerHTML = headers;
+                let bestModel = ''; let bestMetric = analysisType === 'timeseries' ? Infinity : -1;
+                selectedModels.forEach(modelName => {
+                    const row = document.createElement('tr'); let metricValue;
+                    if (analysisType === 'timeseries') {
+                         const rmse = (Math.random()*5+1).toFixed(3); const mae = (Math.random()*4+1).toFixed(3);
+                         row.innerHTML = `<td class="px-6 py-4 text-sm font-medium">${modelName}</td><td class="px-6 py-4 text-sm">${rmse}</td><td class="px-6 py-4 text-sm">${mae}</td>`;
+                         metricValue = parseFloat(rmse); if (metricValue < bestMetric) { bestMetric = metricValue; bestModel = modelName; }
+                    } else {
+                        const accVal = Math.random()*15+80; const acc = accVal.toFixed(1)+'%'; const prec = (Math.random()*20+75).toFixed(1)+'%'; const rec = (Math.random()*20+78).toFixed(1)+'%'; const f1 = (Math.random()*18+76).toFixed(1)+'%';
+                        row.innerHTML = `<td class="px-6 py-4 text-sm font-medium">${modelName}</td><td class="px-6 py-4 text-sm">${acc}</td><td class="px-6 py-4 text-sm">${prec}</td><td class="px-6 py-4 text-sm">${rec}</td><td class="px-6 py-4 text-sm">${f1}</td>`;
+                        metricValue = accVal; if (metricValue > bestMetric) { bestMetric = metricValue; bestModel = modelName; }
+                    }
+                    metricsTableBody.appendChild(row);
+                });
+                summary = `Comparative ${analysisType} analysis with ${selectedModels.join(', ')}. `;
+                if (bestModel) summary += `${bestModel} showed promising results (${analysisType === 'timeseries' ? 'RMSE: ' + bestMetric.toFixed(3) : 'Accuracy: ' + bestMetric.toFixed(1) + '%'}). `;
+            } else {
+                let goalText = selectedGoal ? selectedGoal.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : "Selected Goal";
+                resultsTitle.innerHTML = `<span id="step6-indicator" class="step-indicator step-complete"><svg data-lucide="check" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check"><path d="M20 6 9 17l-5-5"/></svg></span> Insights for: ${goalText}`;
+                metricsNote.textContent = `Metrics for '${goalText}' goal.`;
+                if (selectedGoal === 'predict') {
+                    chartText = `Mock Prediction Chart`;
+                    metricsTableHead.innerHTML = `<tr><th class="px-6 py-3 text-left text-xs font-medium">Metric</th><th class="px-6 py-3 text-left text-xs font-medium">Value</th><th class="px-6 py-3 text-left text-xs font-medium">Interpretation</th></tr>`;
+                    const rmse = (Math.random()*5+1).toFixed(3); const mae = (Math.random()*4+1).toFixed(3);
+                    metricsTableBody.innerHTML = `<tr><td class="px-6 py-4 text-sm font-medium">RMSE</td><td class="px-6 py-4 text-sm">${rmse}</td><td class="px-6 py-4 text-sm">Lower is better</td></tr><tr><td class="px-6 py-4 text-sm font-medium">MAE</td><td class="px-6 py-4 text-sm">${mae}</td><td class="px-6 py-4 text-sm">Lower is better</td></tr>`;
+                    summary = `Prediction for ${predictStepsInput.value} steps. RMSE: ${rmse}, MAE: ${mae}. `;
+                } else if (selectedGoal === 'anomaly') {
+                     chartText = `Mock Anomaly Detection Chart`;
+                     metricsTableHead.innerHTML = `<tr><th class="px-6 py-3 text-left text-xs font-medium">Metric</th><th class="px-6 py-3 text-left text-xs font-medium">Value</th></tr>`;
+                     const anomalies = Math.floor(Math.random()*15+1);
+                     metricsTableBody.innerHTML = `<tr><td class="px-6 py-4 text-sm font-medium">Anomalies Detected</td><td class="px-6 py-4 text-sm">${anomalies}</td></tr><tr><td class="px-6 py-4 text-sm font-medium">Method</td><td class="px-6 py-4 text-sm">[e.g., Isolation Forest]</td></tr>`;
+                     summary = `Anomaly detection found ${anomalies} outliers. `;
+                } else if (selectedGoal === 'pattern') {
+                     chartText = `Mock Trend/Seasonality Chart`;
+                     metricsTableHead.innerHTML = `<tr><th class="px-6 py-3 text-left text-xs font-medium">Component</th><th class="px-6 py-3 text-left text-xs font-medium">Finding</th></tr>`;
+                     metricsTableBody.innerHTML = `<tr><td class="px-6 py-4 text-sm font-medium">Trend</td><td class="px-6 py-4 text-sm">[e.g., Stable]</td></tr><tr><td class="px-6 py-4 text-sm font-medium">Seasonality</td><td class="px-6 py-4 text-sm">[e.g., Weekly]</td></tr>`;
+                     summary = `Pattern analysis results. `;
+                } else if (selectedGoal === 'categorize' || selectedGoal === 'predict_category') {
+                     chartText = `Mock Classification Chart`;
+                     metricsTableHead.innerHTML = `<tr><th class="px-6 py-3 text-left text-xs font-medium">Metric</th><th class="px-6 py-3 text-left text-xs font-medium">Value</th></tr>`;
+                     const acc = (Math.random()*15+82).toFixed(1)+'%'; const f1 = (Math.random()*18+78).toFixed(1)+'%';
+                     metricsTableBody.innerHTML = `<tr><td class="px-6 py-4 text-sm font-medium">Accuracy</td><td class="px-6 py-4 text-sm">${acc}</td></tr><tr><td class="px-6 py-4 text-sm font-medium">F1-Score</td><td class="px-6 py-4 text-sm">${f1}</td></tr>`;
+                     summary = `Classification for ${goalText} accuracy: ${acc}. `;
+                }
+                 summary += `Analysis used suitable algorithms.`;
+            }
+            resultsChart.innerHTML = `<span class="text-gray-600 font-medium">${chartText}</span>`;
+            publicationSummary.textContent = summary;
+             renderLucideIcons(); // Render icons in results section if needed
+        }
+
+        copySummaryButton.addEventListener('click', () => {
+            navigator.clipboard.writeText(publicationSummary.textContent)
+                .then(() => { copyFeedback.classList.remove('hidden'); setTimeout(() => { copyFeedback.classList.add('hidden'); }, 2000); })
+                .catch(err => { console.error('Failed to copy: ', err); alert('Failed to copy summary.'); });
+        });
+        exportDocxButton.addEventListener('click', () => alert('DOCX export mock.'));
+        exportDataButton.addEventListener('click', () => alert('Data export mock.'));
+
+        startOverButton.addEventListener('click', () => {
+            // Reset state and UI, then redirect
+            window.location.href = "sensorflow_landing_page_v1.html";
+        });
+
+        // --- UI Enhancements Logic ---
+
+        // Profile Menu Toggle
+        profileMenuButton.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent click from bubbling up to document
+            profileDropdown.classList.toggle('show');
+            profileMenuButton.classList.toggle('active');
+            profileMenuButton.setAttribute('aria-expanded', profileDropdown.classList.contains('show'));
+        });
+
+        // Close dropdown if clicked outside
+        document.addEventListener('click', (event) => {
+            if (profileDropdown && profileMenuButton && !profileMenuButton.contains(event.target) && !profileDropdown.contains(event.target)) {
+                profileDropdown.classList.remove('show');
+                profileMenuButton.classList.remove('active');
+                profileMenuButton.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        // Mock Logout
+        logoutButton.addEventListener('click', (event) => {
+            event.preventDefault(); // Prevent default link behavior
+            alert('Logging out (mock)... redirecting to landing page.');
+            window.location.href = "sensorflow_landing_page_v1.html";
+        });
+
+        // History Menu Hover Effect (CSS handles expansion, JS handles body padding)
+        historyMenu.addEventListener('mouseenter', () => {
+            bodyElement.classList.add('menu-expanded');
+        });
+        historyMenu.addEventListener('mouseleave', () => {
+             bodyElement.classList.remove('menu-expanded');
+        });
+
+        // Wiki Button Click
+        wikiButton.addEventListener('click', () => {
+            alert('Navigating to Help / Wiki pages (mock).');
+            // window.open('your-wiki-url', '_blank'); // Example for real navigation
+        });
+
+
+        // --- Initial Setup for App Page ---
+        function initializeAppWorkflow() {
+            populateStep2Options(); // Populate dynamic radio buttons for Step 2
+            populateStep3Options(); // Populate dynamic radio buttons for Step 3
+            updateProgress(1); // Start app workflow at step 1
+            renderLucideIcons(); // Initial render
+        }
+
+        // Use DOMContentLoaded which fires earlier than window.onload
+        document.addEventListener('DOMContentLoaded', () => {
+             initializeAppWorkflow();
+        });
+
+    </script>
+</body>
+</html>

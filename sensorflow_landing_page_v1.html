@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SensorFlow AI - Unlock Your Data's Potential</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            color: #1f2937;
+            margin: 0; /* Ensure no default margin */
+        }
+
+        /* Landing Page Styles */
+        #landing-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Engaging gradient */
+        }
+        .landing-nav {
+            padding: 1.5rem 2.5rem; /* Increased padding */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(0,0,0,0.15); /* Slightly darker transparency */
+            position: fixed; /* Fixed navbar */
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000; /* Ensure navbar is on top */
+            box-sizing: border-box;
+        }
+        .landing-nav .logo {
+            font-size: 1.75rem; /* Larger logo */
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+        .landing-nav a {
+            color: #e0e7ff;
+            margin-left: 2rem; /* Increased spacing */
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        .landing-nav a:hover {
+            color: white;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+        }
+
+        .hero-section {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 8rem 2rem 4rem; /* Increased top padding to account for fixed navbar */
+            color: white;
+        }
+        .hero-section h1 {
+            font-size: 3.5rem; /* Even larger hero title */
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.15;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.25);
+        }
+        .hero-section p.subtitle {
+            font-size: 1.25rem; /* Larger hero subtitle */
+            margin-bottom: 3rem;
+            max-width: 650px;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        .hero-actions button, .hero-actions a { /* Apply button styles to <a> tags too if used for navigation */
+            font-size: 1.125rem; /* Larger button text */
+            padding: 0.875rem 2.25rem; /* Larger buttons */
+            margin: 0 0.75rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: inline-block; /* For <a> tags to behave like buttons */
+            text-decoration: none; /* Remove underline from <a> tags styled as buttons */
+        }
+         .hero-actions button:hover, .hero-actions a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        .button-signup {
+            background-color: #10b981; /* Emerald green */
+            color:white !important; /* Ensure text color is white for <a> tag */
+            border: none;
+        }
+        .button-signup:hover { background-color: #059669; }
+
+        .button-login {
+            background-color: rgba(255,255,255,0.15);
+            color:white !important; /* Ensure text color is white for <a> tag */
+            border: 2px solid white;
+        }
+        .button-login:hover { background-color: rgba(255,255,255,0.25); }
+
+        /* Footer for landing page */
+        .landing-footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: rgba(255,255,255,0.75);
+            font-size: 0.875rem;
+            background-color: rgba(0,0,0,0.15);
+        }
+
+        /* Basic responsive adjustments */
+        @media (max-width: 768px) {
+            .landing-nav {
+                padding: 1rem 1.5rem;
+                /* Removed flex-direction: column to keep logo and links somewhat inline if space allows or wrap naturally */
+            }
+            .landing-nav .logo {
+                margin-bottom: 0.5rem; /* Add some space if they stack */
+            }
+            .landing-nav div:last-child { /* Container for nav links */
+                display: flex;
+                flex-wrap: wrap; /* Allow links to wrap */
+                justify-content: center; /* Center links if they wrap */
+            }
+            .landing-nav div:last-child a {
+                margin: 0.25rem 0.5rem; /* Adjust margin for wrapped links */
+            }
+            .hero-section h1 {
+                font-size: 2.5rem;
+            }
+            .hero-section p.subtitle {
+                font-size: 1rem;
+            }
+            .hero-actions button, .hero-actions a {
+                width: 80%;
+                margin: 0.5rem auto; /* Center buttons when stacked */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="landing-page">
+        <nav class="landing-nav">
+            <div class="logo">SensorFlow AI</div>
+            <div>
+                <a href="#about">About</a>
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#contact">Contact</a>
+            </div>
+        </nav>
+        <main class="hero-section">
+            <h1>Unlock the Power of Your Sensor Data with AI</h1>
+            <p class="subtitle">SensorFlow AI empowers researchers to effortlessly leverage advanced AI and Machine Learning models. Analyze complex sensor data, uncover hidden patterns, make accurate predictions, and generate publication-ready insights – no prior AI expertise required.</p>
+            <div class="hero-actions">
+                <a href="sensorflow_app_workflow_v1.html" id="signup-link" class="action-button button-signup">Get Started Free</a>
+                <a href="sensorflow_app_workflow_v1.html" id="login-link" class="action-button button-login">Login</a>
+            </div>
+        </main>
+        <footer class="landing-footer">
+            &copy; <span id="current-year"></span> SensorFlow AI. All rights reserved.
+        </footer>
+    </div>
+
+    <script>
+        // Set current year in footer
+        const currentYearSpan = document.getElementById('current-year');
+        if (currentYearSpan) {
+            currentYearSpan.textContent = new Date().getFullYear();
+        }
+
+        // JavaScript for button clicks is no longer needed as <a> tags handle navigation.
+        // If you wanted to add analytics or other JS logic on click, you could add listeners:
+        /*
+        const signupLink = document.getElementById('signup-link');
+        const loginLink = document.getElementById('login-link');
+
+        if (signupLink) {
+            signupLink.addEventListener('click', (event) => {
+                console.log('Signup link clicked - navigating to app page via href.');
+                // You could preventDefault and do other things here if needed
+            });
+        }
+
+        if (loginLink) {
+            loginLink.addEventListener('click', (event) => {
+                console.log('Login link clicked - navigating to app page via href.');
+            });
+        }
+        */
+    </script>
+</body>
+</html>
