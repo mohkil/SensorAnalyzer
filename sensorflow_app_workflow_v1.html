@@ -10,7 +10,6 @@
     <script>
         // Function to render Lucide icons after page load or DOM updates
         const renderLucideIcons = () => {
-            // Small delay to ensure DOM is ready after potential updates
             setTimeout(() => {
                 if (window.lucide) {
                     try {
@@ -21,152 +20,48 @@
                     }
                 } else {
                     console.warn("Lucide library not available yet for rendering.");
-                    // Optionally try again later
-                    // setTimeout(renderLucideIcons, 500);
                 }
-            }, 50); // 50ms delay
+            }, 50);
         };
     </script>
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5;
-            color: #1f2937;
-            padding-left: 4rem; /* Add padding for collapsed side menu */
-            transition: padding-left 0.3s ease; /* Smooth transition for padding */
+            font-family: 'Inter', sans-serif; background-color: #f0f2f5; color: #1f2937;
+            padding-left: 4rem; transition: padding-left 0.3s ease;
         }
-        body.menu-expanded {
-            padding-left: 16rem; /* Add padding for expanded side menu */
-        }
-
-        /* Header */
+        body.menu-expanded { padding-left: 16rem; }
         .app-header {
-            padding: 0.75rem 1.5rem; /* Adjusted padding */
-            background-color: #ffffff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-bottom: 1.5rem;
-            display: flex;
-            justify-content: space-between; /* Space between logo and profile */
-            align-items: center;
-            position: sticky; /* Make header sticky */
-            top: 0;
-            z-index: 1010; /* Ensure header is above side menu */
+            padding: 0.75rem 1.5rem; background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 1010;
         }
-        .app-header .logo-link {
-            font-size: 1.75rem; font-weight: 800; color: #3b82f6;
-            text-decoration: none; letter-spacing: -0.5px;
-        }
+        .app-header .logo-link { font-size: 1.75rem; font-weight: 800; color: #3b82f6; text-decoration: none; letter-spacing: -0.5px; }
         .app-header .logo-link:hover { color: #2563eb; }
-
-        /* Profile Menu */
         .profile-menu-container { position: relative; }
-        .profile-button {
-            width: 40px; height: 40px; border-radius: 50%; background-color: #e5e7eb;
-            display: flex; align-items: center; justify-content: center; cursor: pointer;
-            border: 2px solid transparent; transition: border-color 0.2s;
-        }
+        .profile-button { width: 40px; height: 40px; border-radius: 50%; background-color: #e5e7eb; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s; }
         .profile-button:hover, .profile-button.active { border-color: #3b82f6; }
-        .profile-dropdown {
-            position: absolute; top: 100%; right: 0; margin-top: 0.5rem;
-            background-color: white; border-radius: 0.375rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            border: 1px solid #e5e7eb; z-index: 1020; width: 180px;
-            opacity: 0; visibility: hidden; transform: translateY(-10px);
-            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
-        }
+        .profile-dropdown { position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background-color: white; border-radius: 0.375rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; z-index: 1020; width: 180px; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s; }
         .profile-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
-        .profile-dropdown a {
-            display: block; padding: 0.75rem 1rem; color: #374151;
-            text-decoration: none; font-size: 0.875rem;
-            transition: background-color 0.2s;
-        }
+        .profile-dropdown a { display: block; padding: 0.75rem 1rem; color: #374151; text-decoration: none; font-size: 0.875rem; transition: background-color 0.2s; }
         .profile-dropdown a:hover { background-color: #f3f4f6; }
         .profile-dropdown .divider { height: 1px; background-color: #e5e7eb; margin: 0.25rem 0; }
-
-        /* Sliding History Menu */
-        .history-menu {
-            position: fixed; left: 0; top: 0; height: 100%;
-            width: 4rem; /* Collapsed width */
-            background-color: #ffffff;
-            border-right: 1px solid #e5e7eb;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
-            overflow: hidden; /* Hide content when collapsed */
-            transition: width 0.3s ease;
-            z-index: 1000; /* Below header */
-            padding-top: 60px; /* Space for sticky header */
-            display: flex;
-            flex-direction: column; /* Stack title and list */
-        }
-        .history-menu:hover {
-            width: 16rem; /* Expanded width */
-        }
-        .history-menu-title {
-            padding: 1rem; font-weight: 600; color: #4b5563;
-            white-space: nowrap; /* Prevent wrapping */
-            opacity: 0; /* Hidden when collapsed */
-            transition: opacity 0.2s 0.1s ease; /* Delay opacity transition */
-            font-size: 0.875rem;
-            border-bottom: 1px solid #e5e7eb;
-            text-align: center;
-        }
-        .history-menu:hover .history-menu-title {
-            opacity: 1;
-        }
-        .history-menu-list {
-            list-style: none; padding: 0; margin: 0;
-            overflow-y: auto; /* Allow scrolling if list is long */
-            flex-grow: 1; /* Take remaining space */
-            opacity: 0; /* Hidden when collapsed */
-            transition: opacity 0.2s 0.1s ease;
-        }
-        .history-menu:hover .history-menu-list {
-            opacity: 1;
-        }
-        .history-menu-list li a {
-            display: block; padding: 0.75rem 1rem; font-size: 0.8rem; color: #374151;
-            text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            border-bottom: 1px solid #f3f4f6;
-            transition: background-color 0.2s;
-        }
+        .history-menu { position: fixed; left: 0; top: 0; height: 100%; width: 4rem; background-color: #ffffff; border-right: 1px solid #e5e7eb; box-shadow: 2px 0 5px rgba(0,0,0,0.05); overflow: hidden; transition: width 0.3s ease; z-index: 1000; padding-top: 60px; display: flex; flex-direction: column; }
+        .history-menu:hover { width: 16rem; }
+        .history-menu-title { padding: 1rem; font-weight: 600; color: #4b5563; white-space: nowrap; opacity: 0; transition: opacity 0.2s 0.1s ease; font-size: 0.875rem; border-bottom: 1px solid #e5e7eb; text-align: center; }
+        .history-menu:hover .history-menu-title { opacity: 1; }
+        .history-menu-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex-grow: 1; opacity: 0; transition: opacity 0.2s 0.1s ease; }
+        .history-menu:hover .history-menu-list { opacity: 1; }
+        .history-menu-list li a { display: block; padding: 0.75rem 1rem; font-size: 0.8rem; color: #374151; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px solid #f3f4f6; transition: background-color 0.2s; }
         .history-menu-list li a:hover { background-color: #eff6ff; color: #1d4ed8; }
         .history-menu-list li .date { display: block; font-size: 0.7rem; color: #6b7280; }
-
-        /* Wiki Button */
-        .wiki-button {
-            position: fixed; left: 0; bottom: 0;
-            width: 4rem; /* Match collapsed menu width */
-            padding: 1rem 0;
-            background-color: #ffffff;
-            border-top: 1px solid #e5e7eb;
-            text-align: center;
-            z-index: 1001; /* Above menu content but below header */
-            transition: width 0.3s ease;
-            cursor: pointer;
-        }
-         .history-menu:hover + .wiki-button, .wiki-button:hover { /* Expand wiki button when menu expands or on its own hover */
-             width: 16rem;
-         }
-
+        .wiki-button { position: fixed; left: 0; bottom: 0; width: 4rem; padding: 1rem 0; background-color: #ffffff; border-top: 1px solid #e5e7eb; text-align: center; z-index: 1001; transition: width 0.3s ease; cursor: pointer; }
+        .history-menu:hover + .wiki-button, .wiki-button:hover { width: 16rem; }
         .wiki-button .icon { display: inline-block; }
         .wiki-button .text { display: none; margin-left: 0.5rem; font-size: 0.875rem; font-weight: 500; color: #3b82f6; }
-         .history-menu:hover + .wiki-button .icon, .wiki-button:hover .icon { display: inline-block; } /* Keep icon visible */
-         .history-menu:hover + .wiki-button .text, .wiki-button:hover .text { display: inline-block; } /* Show text on hover */
-
-        /* App Container Adjustment */
-        .app-container {
-            max-width: calc(100% - 4rem); /* Adjust max-width based on collapsed menu */
-            margin: 0 auto 2rem 4rem; /* Auto centers horizontally, accounts for left padding */
-            padding: 2rem; border-radius: 0.75rem; /* Rounded all corners */
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            background-color: white;
-             transition: margin-left 0.3s ease; /* Smooth transition for margin */
-        }
-         body.menu-expanded .app-container {
-             margin-left: 16rem;
-             max-width: calc(100% - 16rem);
-         }
-
-
-        /* Other styles from previous version (progress, steps, buttons, etc.) */
+        .history-menu:hover + .wiki-button .icon, .wiki-button:hover .icon { display: inline-block; }
+        .history-menu:hover + .wiki-button .text, .wiki-button:hover .text { display: inline-block; }
+        .app-container { max-width: calc(100% - 4rem); margin: 0 auto 2rem 4rem; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); background-color: white; transition: margin-left 0.3s ease; }
+        body.menu-expanded .app-container { margin-left: 16rem; max-width: calc(100% - 16rem); }
         .progress-container { width: 100%; background-color: #e5e7eb; border-radius: 9999px; overflow: hidden; height: 0.75rem; margin-bottom: 1.5rem; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1); }
         .progress-bar { height: 100%; background: linear-gradient(to right, #60a5fa, #3b82f6); width: 0%; transition: width 0.6s ease-in-out; border-radius: 9999px; }
         .step-indicator { display: flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; border-radius: 50%; font-weight: 600; margin-right: 0.75rem; transition: background-color 0.3s, color 0.3s, border-color 0.3s; border: 2px solid transparent; }
@@ -200,7 +95,6 @@
         .button-start-over:hover { background-color: #374151; }
         .button-back { color: #4b5563; background-color: #f3f4f6; border: 1px solid #d1d5db; }
         .button-back:hover { background-color: #e5e7eb; }
-
     </style>
 </head>
 <body>
@@ -212,7 +106,7 @@
             <li><a href="#"><span class="font-medium">Anomaly Detection - Unit 3</span><span class="date">May 1, 2025</span></a></li>
             <li><a href="#"><span class="font-medium">Pattern Analysis - Dataset Y</span><span class="date">Apr 28, 2025</span></a></li>
             <li><a href="#"><span class="font-medium">Prediction - Sensor B</span><span class="date">Apr 25, 2025</span></a></li>
-            </ul>
+        </ul>
     </aside>
 
      <div id="wiki-button" class="wiki-button">
@@ -222,9 +116,8 @@
         <span class="text">Help / Wiki</span>
     </div>
 
-
     <header class="app-header">
-        <a href="sensorflow_landing_page_v1.html" class="logo-link">SensorFlow AI</a>
+        <a href="index.html" class="logo-link">SensorFlow AI</a>
         <div class="profile-menu-container">
             <button id="profile-menu-button" class="profile-button" aria-label="User menu" aria-haspopup="true" aria-expanded="false">
                 <svg data-lucide="user" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user text-gray-600"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -248,7 +141,7 @@
         <div id="progress-text" class="text-center text-sm text-gray-500 mb-8">Step 1 of 6: Prepare Your Data</div>
 
         <div id="step1" class="step-section">
-            <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+             <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
                 <span id="step1-indicator" class="step-indicator step-active">1</span> Prepare Your Data
             </h2>
             <p class="text-sm text-gray-500 mb-4">First, let's get your sensor readings. Upload a CSV or XLSX file.</p>
@@ -286,14 +179,12 @@
                 </button>
             </div>
         </div>
-
         <div id="step2" class="step-section hidden">
              <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
                 <span id="step2-indicator" class="step-indicator step-inactive">2</span> Define Analysis Type
             </h2>
             <p class="text-sm text-gray-500 mb-4">What kind of story does your data tell?</p>
-            <div id="analysis-type-selection" class="space-y-3">
-                </div>
+            <div id="analysis-type-selection" class="space-y-3"></div>
             <div class="mt-6 flex justify-between">
                 <button class="action-button button-back back-button" data-targetstep="1">
                     <svg data-lucide="arrow-left" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
@@ -305,14 +196,12 @@
                 </button>
             </div>
         </div>
-
         <div id="step3" class="step-section hidden">
             <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
                  <span id="step3-indicator" class="step-indicator step-inactive">3</span> Choose Your Path
             </h2>
             <p class="text-sm text-gray-600 mb-4">Ready to choose your tools or need a guide?</p>
-            <div id="expertise-selection" class="space-y-3">
-                </div>
+            <div id="expertise-selection" class="space-y-3"></div>
             <div class="mt-6 flex justify-between">
                  <button class="action-button button-back back-button" data-targetstep="2">
                     <svg data-lucide="arrow-left" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
@@ -324,7 +213,6 @@
                 </button>
             </div>
         </div>
-
         <div id="step4" class="step-section hidden">
              <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
                  <span id="step4-indicator" class="step-indicator step-inactive">4</span> Configure Your Analysis
@@ -377,7 +265,6 @@
                 </button>
             </div>
         </div>
-
         <div id="step5" class="step-section hidden">
             <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
                  <span id="step5-indicator" class="step-indicator step-inactive">5</span> Processing Your Data...
@@ -394,7 +281,6 @@
                 </button>
             </div>
         </div>
-
         <div id="step6" class="step-section hidden">
             <h2 id="results-title" class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
                  <span id="step6-indicator" class="step-indicator step-inactive">6</span> Discover Your Insights!
@@ -432,84 +318,7 @@
         const TOTAL_STEPS = 6;
 
         // --- DOM Elements ---
-        const appMainContainer = document.getElementById('app-main-container');
-        const progressBarEl = document.getElementById('progress-bar');
-        const progressTextEl = document.getElementById('progress-text');
-        const profileMenuButton = document.getElementById('profile-menu-button');
-        const profileDropdown = document.getElementById('profile-dropdown');
-        const historyMenu = document.getElementById('history-menu');
-        const wikiButton = document.getElementById('wiki-button');
-        const bodyElement = document.body;
-
-        const stepSections = {
-            1: document.getElementById('step1'), 2: document.getElementById('step2'),
-            3: document.getElementById('step3'), 4: document.getElementById('step4'),
-            5: document.getElementById('step5'), 6: document.getElementById('step6'),
-        };
-        const stepIndicators = {
-            1: document.getElementById('step1-indicator'), 2: document.getElementById('step2-indicator'),
-            3: document.getElementById('step3-indicator'), 4: document.getElementById('step4-indicator'),
-            5: document.getElementById('step5-indicator'), 6: document.getElementById('step6-indicator'),
-        };
-
-        // Step 1
-        const fileUpload = document.getElementById('file-upload');
-        const fileFeedback = document.getElementById('file-feedback');
-        const fileFeedbackText = document.getElementById('file-feedback-text');
-        const dataPreviewContainer = document.getElementById('data-preview-container');
-        const dataPreviewBody = document.getElementById('data-preview-body');
-        const previewCol3Header = document.getElementById('preview-col3-header');
-        const nextStep1Button = document.getElementById('next-step1');
-
-        // Step 2
-        const analysisTypeSelectionDiv = document.getElementById('analysis-type-selection');
-        let analysisTypeRadios;
-        const nextStep2Button = document.getElementById('next-step2');
-
-        // Step 3
-        const expertiseSelectionDiv = document.getElementById('expertise-selection');
-        let expertiseRadios;
-        const nextStep3Button = document.getElementById('next-step3');
-
-        // Step 4
-        const modelSelectionArea = document.getElementById('model-selection-area');
-        const goalSelectionArea = document.getElementById('goal-selection-area');
-        const modelAnalysisTypeText = document.getElementById('model-analysis-type-text');
-        const goalAnalysisTypeText = document.getElementById('goal-analysis-type-text');
-        const tsModelsDiv = document.getElementById('timeseries-models');
-        const clModelsDiv = document.getElementById('classification-models');
-        const tsGoalsDiv = document.getElementById('timeseries-goals');
-        const clGoalsDiv = document.getElementById('classification-goals');
-        let modelCheckboxes;
-        let goalRadios;
-        const configOptionsDiv = document.getElementById('config-options');
-        const predictConfigOptions = document.getElementById('predict-config-options');
-        const classificationConfigOptions = document.getElementById('classification-config-options');
-        const noConfigMessage = document.getElementById('no-config-message');
-        const predictStepsInput = document.getElementById('predict-steps');
-        const nextStep4Button = document.getElementById('next-step4');
-
-        // Step 5
-        const analysisFeedback = document.getElementById('analysis-feedback');
-        const analysisFeedbackText = document.getElementById('analysis-feedback-text');
-        const analysisProgressBar = document.getElementById('analysis-progress-bar');
-
-        // Step 6
-        const resultsTitle = document.getElementById('results-title');
-        const resultsChart = document.getElementById('results-chart');
-        const metricsTableHead = document.getElementById('metrics-table-head');
-        const metricsTableBody = document.getElementById('metrics-table-body');
-        let metricsPlaceholderRow = document.getElementById('metrics-placeholder-row');
-        const metricsNote = document.getElementById('metrics-note');
-        const publicationSummary = document.getElementById('publication-summary');
-        const copySummaryButton = document.getElementById('copy-summary');
-        const copyFeedback = document.getElementById('copy-feedback');
-        const exportDocxButton = document.getElementById('export-docx');
-        const exportDataButton = document.getElementById('export-data');
-        const startOverButton = document.getElementById('start-over');
-        const allBackButtons = document.querySelectorAll('.back-button');
-        const logoutButton = document.getElementById('logout-button');
-
+        // (All elements are queried within initializeAppWorkflow or event handlers)
 
         // --- State Variables ---
         let currentStep = 1;
@@ -518,52 +327,27 @@
         let selectedModels = [];
         let selectedGoal = null;
 
-        // --- Dynamic Content Population ---
-        function populateStep2Options() {
-            analysisTypeSelectionDiv.innerHTML = `
-                <label class="block cursor-pointer">
-                    <input type="radio" name="analysis-type" value="timeseries" class="hidden peer analysis-type-radio">
-                    <span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center p-4 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-150">
-                        <svg data-lucide="trending-up" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trending-up mr-3 text-blue-600"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-                        <span class="block text-sm font-medium text-gray-700">Time Series Analysis<span class="block text-xs text-gray-500">Analyze trends, predict, or find anomalies over time.</span></span>
-                    </span>
-                </label>
-                <label class="block cursor-pointer">
-                    <input type="radio" name="analysis-type" value="classification" class="hidden peer analysis-type-radio">
-                    <span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center p-4 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-150">
-                        <svg data-lucide="layout-grid" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-grid mr-3 text-blue-600"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/></svg>
-                        <span class="block text-sm font-medium text-gray-700">Classification Analysis<span class="block text-xs text-gray-500">Categorize data into predefined groups.</span></span>
-                    </span>
-                </label>`;
-            analysisTypeRadios = document.querySelectorAll('.analysis-type-radio');
-            analysisTypeRadios.forEach(addAnalysisTypeRadioListener);
-        }
+        // --- Functions ---
+        const getElement = (id) => document.getElementById(id);
+        const querySelectorAll = (selector) => document.querySelectorAll(selector);
 
-        function populateStep3Options() {
-            expertiseSelectionDiv.innerHTML = `
-                <label class="block cursor-pointer">
-                    <input type="radio" name="expertise-level" value="advanced" class="hidden peer expertise-radio">
-                    <span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center p-4 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-150">
-                        <svg data-lucide="list-checks" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list-checks mr-3 text-blue-600"><path d="M14 9.5 17 12l3-2.5"/><path d="m3 12 3 2.5 4-5"/><path d="m3 5 3 2.5 4-5"/><path d="M3 19l3 2.5 4-5"/></svg>
-                        <span class="block text-sm font-medium text-gray-700">Expert Path: Select AI models<span class="block text-xs text-gray-500">Choose up to 3 models manually.</span></span>
-                    </span>
-                </label>
-                <label class="block cursor-pointer">
-                    <input type="radio" name="expertise-level" value="beginner" class="hidden peer expertise-radio">
-                    <span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center p-4 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-150">
-                         <svg data-lucide="navigation" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-navigation mr-3 text-blue-600"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-                        <span class="block text-sm font-medium text-gray-700">Guided Path: Select analysis goal<span class="block text-xs text-gray-500">Choose what you want to achieve. (Recommended)</span></span>
-                    </span>
-                </label>`;
-            expertiseRadios = document.querySelectorAll('.expertise-radio');
-            expertiseRadios.forEach(addExpertiseRadioListener);
-        }
-
-        // --- Main Functions ---
         function updateProgress(step) {
             currentStep = step;
+            const progressBarEl = getElement('progress-bar');
+            const progressTextEl = getElement('progress-text');
+            const stepIndicators = {
+                1: getElement('step1-indicator'), 2: getElement('step2-indicator'),
+                3: getElement('step3-indicator'), 4: getElement('step4-indicator'),
+                5: getElement('step5-indicator'), 6: getElement('step6-indicator'),
+            };
+            const stepSections = {
+                1: getElement('step1'), 2: getElement('step2'),
+                3: getElement('step3'), 4: getElement('step4'),
+                5: getElement('step5'), 6: getElement('step6'),
+            };
+
             const progressPercentage = ((step - 1) / (TOTAL_STEPS -1)) * 100;
-            progressBarEl.style.width = `${progressPercentage}%`;
+            if (progressBarEl) progressBarEl.style.width = `${progressPercentage}%`;
 
             for (let i = 1; i <= TOTAL_STEPS; i++) {
                 const indicator = stepIndicators[i];
@@ -581,71 +365,110 @@
                 }
             }
             const stepTitles = {1: "Prepare Your Data", 2: "Define Analysis Type", 3: "Choose Your Path", 4: "Configure Analysis", 5: "Processing...", 6: "Discover Insights!"};
-            progressTextEl.textContent = `Step ${step} of ${TOTAL_STEPS}: ${stepTitles[step] || ''}`;
+            if (progressTextEl) progressTextEl.textContent = `Step ${step} of ${TOTAL_STEPS}: ${stepTitles[step] || ''}`;
 
             for (const key in stepSections) {
-                stepSections[key].classList.toggle('hidden', parseInt(key) !== step);
+                if (stepSections[key]) stepSections[key].classList.toggle('hidden', parseInt(key) !== step);
             }
-             // Ensure Lucide icons are rendered after potential DOM changes
-            renderLucideIcons();
+             renderLucideIcons();
             window.scrollTo(0, 0);
         }
-
-        allBackButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const targetStep = parseInt(button.dataset.targetstep);
-                updateProgress(targetStep);
-            });
-        });
-
-        fileUpload.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file && (file.name.endsWith('.csv') || file.name.endsWith('.xlsx'))) {
-                fileFeedbackText.textContent = `Great! File "${file.name}" selected.`;
-                fileFeedback.classList.remove('hidden', 'feedback-info', 'feedback-error');
-                fileFeedback.classList.add('feedback-success');
-                nextStep1Button.disabled = false;
-                dataPreviewContainer.classList.remove('hidden');
-                previewCol3Header.classList.toggle('hidden', analysisType !== 'classification');
-                 renderLucideIcons(); // Re-render icons if feedback icon changed
-            } else {
-                fileFeedbackText.textContent = 'Please select a valid CSV or XLSX file.';
-                fileFeedback.classList.remove('hidden', 'feedback-success', 'feedback-info');
-                fileFeedback.classList.add('feedback-error');
-                nextStep1Button.disabled = true;
-                dataPreviewContainer.classList.add('hidden');
-                 renderLucideIcons();
-            }
-        });
-        nextStep1Button.addEventListener('click', () => updateProgress(2));
 
         function addAnalysisTypeRadioListener(radio) {
             radio.addEventListener('change', () => {
                 analysisType = radio.value;
-                nextStep2Button.disabled = false;
+                getElement('next-step2').disabled = false;
                 resetExpertiseAndBelow();
-                previewCol3Header.classList.toggle('hidden', analysisType !== 'classification');
+                getElement('preview-col3-header').classList.toggle('hidden', analysisType !== 'classification');
             });
         }
-        nextStep2Button.addEventListener('click', () => updateProgress(3));
 
         function addExpertiseRadioListener(radio) {
             radio.addEventListener('change', () => {
                 analysisApproach = radio.value;
-                nextStep3Button.disabled = false;
+                getElement('next-step3').disabled = false;
                 resetModelAndGoalSelections();
-                nextStep4Button.disabled = true;
+                getElement('next-step4').disabled = true;
             });
         }
-        nextStep3Button.addEventListener('click', () => {
-             updateProgress(4);
-             prepareStep4();
-         });
+
+        function addModelCheckboxListener(checkbox) {
+            checkbox.addEventListener('change', () => {
+                updateSelectedModels();
+                checkModelSelectionLimit();
+                getElement('next-step4').disabled = selectedModels.length === 0;
+            });
+        }
+
+        function addGoalRadioListener(radio) {
+            radio.addEventListener('change', () => {
+                selectedGoal = radio.value;
+                getElement('next-step4').disabled = false;
+                const isPredictGoal = selectedGoal === 'predict';
+                const isClassifyGoal = ['categorize', 'predict_category'].includes(selectedGoal);
+                getElement('predict-config-options').classList.toggle('hidden', !isPredictGoal);
+                getElement('classification-config-options').classList.toggle('hidden', !isClassifyGoal);
+                getElement('no-config-message').classList.toggle('hidden', isPredictGoal || isClassifyGoal);
+                 renderLucideIcons();
+            });
+        }
+
+        function populateStep2Options() {
+            const analysisTypeSelectionDiv = getElement('analysis-type-selection');
+            if (!analysisTypeSelectionDiv) return;
+            analysisTypeSelectionDiv.innerHTML = `
+                <label class="block cursor-pointer">
+                    <input type="radio" name="analysis-type" value="timeseries" class="hidden peer analysis-type-radio">
+                    <span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center p-4 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-150">
+                        <svg data-lucide="trending-up" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trending-up mr-3 text-blue-600"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                        <span class="block text-sm font-medium text-gray-700">Time Series Analysis<span class="block text-xs text-gray-500">Analyze trends, predict, or find anomalies over time.</span></span>
+                    </span>
+                </label>
+                <label class="block cursor-pointer">
+                    <input type="radio" name="analysis-type" value="classification" class="hidden peer analysis-type-radio">
+                    <span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center p-4 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-150">
+                        <svg data-lucide="layout-grid" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-grid mr-3 text-blue-600"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/></svg>
+                        <span class="block text-sm font-medium text-gray-700">Classification Analysis<span class="block text-xs text-gray-500">Categorize data into predefined groups.</span></span>
+                    </span>
+                </label>`;
+            querySelectorAll('.analysis-type-radio').forEach(addAnalysisTypeRadioListener);
+        }
+
+        function populateStep3Options() {
+            const expertiseSelectionDiv = getElement('expertise-selection');
+            if (!expertiseSelectionDiv) return;
+            expertiseSelectionDiv.innerHTML = `
+                <label class="block cursor-pointer">
+                    <input type="radio" name="expertise-level" value="advanced" class="hidden peer expertise-radio">
+                    <span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center p-4 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-150">
+                        <svg data-lucide="list-checks" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list-checks mr-3 text-blue-600"><path d="M14 9.5 17 12l3-2.5"/><path d="m3 12 3 2.5 4-5"/><path d="m3 5 3 2.5 4-5"/><path d="M3 19l3 2.5 4-5"/></svg>
+                        <span class="block text-sm font-medium text-gray-700">Expert Path: Select AI models<span class="block text-xs text-gray-500">Choose up to 3 models manually.</span></span>
+                    </span>
+                </label>
+                <label class="block cursor-pointer">
+                    <input type="radio" name="expertise-level" value="beginner" class="hidden peer expertise-radio">
+                    <span class="peer-checked:border-blue-500 peer-checked:bg-blue-50 flex items-center p-4 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-150">
+                         <svg data-lucide="navigation" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-navigation mr-3 text-blue-600"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                        <span class="block text-sm font-medium text-gray-700">Guided Path: Select analysis goal<span class="block text-xs text-gray-500">Choose what you want to achieve. (Recommended)</span></span>
+                    </span>
+                </label>`;
+            querySelectorAll('.expertise-radio').forEach(addExpertiseRadioListener);
+        }
 
         function prepareStep4() {
+            const modelSelectionArea = getElement('model-selection-area');
+            const goalSelectionArea = getElement('goal-selection-area');
+            const tsModelsDiv = getElement('timeseries-models');
+            const clModelsDiv = getElement('classification-models');
+            const tsGoalsDiv = getElement('timeseries-goals');
+            const clGoalsDiv = getElement('classification-goals');
+            const predictConfigOptions = getElement('predict-config-options');
+            const classificationConfigOptions = getElement('classification-config-options');
+            const noConfigMessage = getElement('no-config-message');
+            const modelAnalysisTypeText = getElement('model-analysis-type-text');
+            const goalAnalysisTypeText = getElement('goal-analysis-type-text');
+
             [modelSelectionArea, goalSelectionArea, tsModelsDiv, clModelsDiv, tsGoalsDiv, clGoalsDiv, predictConfigOptions, classificationConfigOptions, noConfigMessage].forEach(el => el.classList.add('hidden'));
-            modelCheckboxes = document.querySelectorAll('.model-checkbox');
-            goalRadios = document.querySelectorAll('.goal-radio');
 
             if (analysisApproach === 'advanced') {
                 modelSelectionArea.classList.remove('hidden');
@@ -659,54 +482,43 @@
                 goalAnalysisTypeText.textContent = analysisType === 'timeseries' ? 'Time Series data' : 'Classification data';
                 if (analysisType === 'timeseries') tsGoalsDiv.classList.remove('hidden'); else clGoalsDiv.classList.remove('hidden');
             }
-            modelCheckboxes.forEach(addModelCheckboxListener);
-            goalRadios.forEach(addGoalRadioListener);
-             renderLucideIcons(); // Render icons in the newly shown section
-        }
-
-        function addModelCheckboxListener(checkbox) {
-            checkbox.addEventListener('change', () => {
-                updateSelectedModels();
-                checkModelSelectionLimit();
-                nextStep4Button.disabled = selectedModels.length === 0;
-            });
-        }
-        function addGoalRadioListener(radio) {
-            radio.addEventListener('change', () => {
-                selectedGoal = radio.value;
-                nextStep4Button.disabled = false;
-                const isPredictGoal = selectedGoal === 'predict';
-                const isClassifyGoal = ['categorize', 'predict_category'].includes(selectedGoal);
-                predictConfigOptions.classList.toggle('hidden', !isPredictGoal);
-                classificationConfigOptions.classList.toggle('hidden', !isClassifyGoal);
-                noConfigMessage.classList.toggle('hidden', isPredictGoal || isClassifyGoal);
-                 renderLucideIcons(); // Render icons if config section changes
-            });
+            querySelectorAll('.model-checkbox').forEach(addModelCheckboxListener);
+            querySelectorAll('.goal-radio').forEach(addGoalRadioListener);
+             renderLucideIcons();
         }
 
         function resetExpertiseAndBelow() {
             analysisApproach = null;
+            const expertiseRadios = querySelectorAll('.expertise-radio');
             if(expertiseRadios) expertiseRadios.forEach(r => r.checked = false);
+            const nextStep3Button = getElement('next-step3');
             if(nextStep3Button) nextStep3Button.disabled = true;
             resetModelAndGoalSelections();
         }
+
         function resetModelAndGoalSelections() {
             selectedModels = [];
+            const modelCheckboxes = querySelectorAll('.model-checkbox');
             if(modelCheckboxes) modelCheckboxes.forEach(cb => { cb.checked = false; cb.disabled = false; const label = cb.closest('label'); if(label) label.classList.remove('opacity-50', 'cursor-not-allowed'); });
             selectedGoal = null;
+            const goalRadios = querySelectorAll('.goal-radio');
             if(goalRadios) goalRadios.forEach(rb => rb.checked = false);
+            const predictConfigOptions = getElement('predict-config-options');
+            const classificationConfigOptions = getElement('classification-config-options');
+            const noConfigMessage = getElement('no-config-message');
             [predictConfigOptions, classificationConfigOptions, noConfigMessage].forEach(el => el.classList.add('hidden'));
+            const nextStep4Button = getElement('next-step4');
             if(nextStep4Button) nextStep4Button.disabled = true;
         }
 
         function updateSelectedModels() {
-            selectedModels = Array.from(document.querySelectorAll('.model-checkbox:checked')).map(cb => cb.value);
+            selectedModels = Array.from(querySelectorAll('.model-checkbox:checked')).map(cb => cb.value);
         }
 
         function checkModelSelectionLimit() {
             const checkedCount = selectedModels.length;
             const relevantCheckboxesQuery = analysisType === 'timeseries' ? '#timeseries-models .model-checkbox' : '#classification-models .model-checkbox';
-            document.querySelectorAll(relevantCheckboxesQuery).forEach(cb => {
+            querySelectorAll(relevantCheckboxesQuery).forEach(cb => {
                 const label = cb.closest('label');
                 if (!cb.checked && checkedCount >= MAX_MODELS) {
                     cb.disabled = true;
@@ -718,18 +530,10 @@
             });
         }
 
-        nextStep4Button.addEventListener('click', () => {
-            let proceed = (analysisApproach === 'advanced' && selectedModels.length > 0) || (analysisApproach === 'beginner' && selectedGoal);
-            if (proceed) {
-                updateProgress(5);
-                simulateAnalysisProgress();
-            } else {
-                alert("Please complete your selection.");
-            }
-        });
-
         function simulateAnalysisProgress() {
             let progress = 0;
+            const analysisProgressBar = getElement('analysis-progress-bar');
+            const analysisFeedbackText = getElement('analysis-feedback-text');
             analysisProgressBar.style.width = '0%';
             analysisFeedbackText.textContent = "Warming up the AI engines...";
             const durationFactor = (analysisApproach === 'advanced' && selectedModels.length > 0) ? selectedModels.length : 1.5;
@@ -751,8 +555,15 @@
         }
 
         function displayMockResults() {
+            const metricsTableBody = getElement('metrics-table-body');
+            const metricsTableHead = getElement('metrics-table-head');
+            const resultsTitle = getElement('results-title');
+            const metricsNote = getElement('metrics-note');
+            const resultsChart = getElement('results-chart');
+            const publicationSummary = getElement('publication-summary');
+
             metricsTableBody.innerHTML = '';
-            const existingPlaceholder = document.getElementById('metrics-placeholder-row');
+            const existingPlaceholder = getElement('metrics-placeholder-row');
             if (existingPlaceholder) existingPlaceholder.remove();
 
             let summary = ''; let chartText = '[Chart Placeholder]';
@@ -787,7 +598,7 @@
                     metricsTableHead.innerHTML = `<tr><th class="px-6 py-3 text-left text-xs font-medium">Metric</th><th class="px-6 py-3 text-left text-xs font-medium">Value</th><th class="px-6 py-3 text-left text-xs font-medium">Interpretation</th></tr>`;
                     const rmse = (Math.random()*5+1).toFixed(3); const mae = (Math.random()*4+1).toFixed(3);
                     metricsTableBody.innerHTML = `<tr><td class="px-6 py-4 text-sm font-medium">RMSE</td><td class="px-6 py-4 text-sm">${rmse}</td><td class="px-6 py-4 text-sm">Lower is better</td></tr><tr><td class="px-6 py-4 text-sm font-medium">MAE</td><td class="px-6 py-4 text-sm">${mae}</td><td class="px-6 py-4 text-sm">Lower is better</td></tr>`;
-                    summary = `Prediction for ${predictStepsInput.value} steps. RMSE: ${rmse}, MAE: ${mae}. `;
+                    summary = `Prediction for ${getElement('predict-steps').value} steps. RMSE: ${rmse}, MAE: ${mae}. `;
                 } else if (selectedGoal === 'anomaly') {
                      chartText = `Mock Anomaly Detection Chart`;
                      metricsTableHead.innerHTML = `<tr><th class="px-6 py-3 text-left text-xs font-medium">Metric</th><th class="px-6 py-3 text-left text-xs font-medium">Value</th></tr>`;
@@ -810,69 +621,130 @@
             }
             resultsChart.innerHTML = `<span class="text-gray-600 font-medium">${chartText}</span>`;
             publicationSummary.textContent = summary;
-             renderLucideIcons(); // Render icons in results section if needed
+             renderLucideIcons();
         }
 
-        copySummaryButton.addEventListener('click', () => {
-            navigator.clipboard.writeText(publicationSummary.textContent)
-                .then(() => { copyFeedback.classList.remove('hidden'); setTimeout(() => { copyFeedback.classList.add('hidden'); }, 2000); })
-                .catch(err => { console.error('Failed to copy: ', err); alert('Failed to copy summary.'); });
-        });
-        exportDocxButton.addEventListener('click', () => alert('DOCX export mock.'));
-        exportDataButton.addEventListener('click', () => alert('Data export mock.'));
+        // --- Event Listeners Setup ---
+        function setupEventListeners() {
+            const profileMenuButton = getElement('profile-menu-button');
+            const profileDropdown = getElement('profile-dropdown');
+            const logoutButton = getElement('logout-button');
+            const historyMenu = getElement('history-menu');
+            const wikiButton = getElement('wiki-button');
+            const bodyElement = document.body;
+            const fileUpload = getElement('file-upload');
+            const nextStep1Button = getElement('next-step1');
+            const nextStep2Button = getElement('next-step2');
+            const nextStep3Button = getElement('next-step3');
+            const nextStep4Button = getElement('next-step4');
+            const copySummaryButton = getElement('copy-summary');
+            const exportDocxButton = getElement('export-docx');
+            const exportDataButton = getElement('export-data');
+            const startOverButton = getElement('start-over');
+            const allBackButtons = querySelectorAll('.back-button');
 
-        startOverButton.addEventListener('click', () => {
-            // Reset state and UI, then redirect
-            window.location.href = "sensorflow_landing_page_v1.html";
-        });
-
-        // --- UI Enhancements Logic ---
-
-        // Profile Menu Toggle
-        profileMenuButton.addEventListener('click', (event) => {
-            event.stopPropagation(); // Prevent click from bubbling up to document
-            profileDropdown.classList.toggle('show');
-            profileMenuButton.classList.toggle('active');
-            profileMenuButton.setAttribute('aria-expanded', profileDropdown.classList.contains('show'));
-        });
-
-        // Close dropdown if clicked outside
-        document.addEventListener('click', (event) => {
-            if (profileDropdown && profileMenuButton && !profileMenuButton.contains(event.target) && !profileDropdown.contains(event.target)) {
-                profileDropdown.classList.remove('show');
-                profileMenuButton.classList.remove('active');
-                profileMenuButton.setAttribute('aria-expanded', 'false');
+            // Profile Menu
+            if (profileMenuButton && profileDropdown) {
+                profileMenuButton.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    profileDropdown.classList.toggle('show');
+                    profileMenuButton.classList.toggle('active');
+                    profileMenuButton.setAttribute('aria-expanded', profileDropdown.classList.contains('show'));
+                });
+                document.addEventListener('click', (event) => {
+                    if (!profileMenuButton.contains(event.target) && !profileDropdown.contains(event.target)) {
+                        profileDropdown.classList.remove('show');
+                        profileMenuButton.classList.remove('active');
+                        profileMenuButton.setAttribute('aria-expanded', 'false');
+                    }
+                });
             }
-        });
+            if (logoutButton) {
+                logoutButton.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    alert('Logging out (mock)... redirecting to landing page.');
+                    window.location.href = "index.html"; // Link to index.html
+                });
+            }
 
-        // Mock Logout
-        logoutButton.addEventListener('click', (event) => {
-            event.preventDefault(); // Prevent default link behavior
-            alert('Logging out (mock)... redirecting to landing page.');
-            window.location.href = "sensorflow_landing_page_v1.html";
-        });
+            // History Menu
+            if (historyMenu) {
+                historyMenu.addEventListener('mouseenter', () => bodyElement.classList.add('menu-expanded'));
+                historyMenu.addEventListener('mouseleave', () => bodyElement.classList.remove('menu-expanded'));
+            }
 
-        // History Menu Hover Effect (CSS handles expansion, JS handles body padding)
-        historyMenu.addEventListener('mouseenter', () => {
-            bodyElement.classList.add('menu-expanded');
-        });
-        historyMenu.addEventListener('mouseleave', () => {
-             bodyElement.classList.remove('menu-expanded');
-        });
+            // Wiki Button
+            if (wikiButton) {
+                wikiButton.addEventListener('click', () => {
+                    alert('Navigating to Help / Wiki pages (mock).');
+                    // window.open('your-wiki-url', '_blank');
+                });
+            }
 
-        // Wiki Button Click
-        wikiButton.addEventListener('click', () => {
-            alert('Navigating to Help / Wiki pages (mock).');
-            // window.open('your-wiki-url', '_blank'); // Example for real navigation
-        });
+            // Step Navigation
+            if (nextStep1Button) nextStep1Button.addEventListener('click', () => updateProgress(2));
+            if (nextStep2Button) nextStep2Button.addEventListener('click', () => updateProgress(3));
+            if (nextStep3Button) nextStep3Button.addEventListener('click', () => { updateProgress(4); prepareStep4(); });
+            if (nextStep4Button) nextStep4Button.addEventListener('click', () => {
+                let proceed = (analysisApproach === 'advanced' && selectedModels.length > 0) || (analysisApproach === 'beginner' && selectedGoal);
+                if (proceed) { updateProgress(5); simulateAnalysisProgress(); } else { alert("Please complete your selection."); }
+            });
+            allBackButtons.forEach(button => {
+                button.addEventListener('click', () => updateProgress(parseInt(button.dataset.targetstep)));
+            });
+
+            // File Upload
+            if (fileUpload) {
+                 fileUpload.addEventListener('change', (event) => {
+                    const file = event.target.files[0];
+                    const fileFeedback = getElement('file-feedback');
+                    const fileFeedbackText = getElement('file-feedback-text');
+                    const nextStep1Button = getElement('next-step1');
+                    const dataPreviewContainer = getElement('data-preview-container');
+                    const previewCol3Header = getElement('preview-col3-header');
+
+                    if (file && (file.name.endsWith('.csv') || file.name.endsWith('.xlsx'))) {
+                        fileFeedbackText.textContent = `Great! File "${file.name}" selected.`;
+                        fileFeedback.className = 'feedback-message feedback-success flex items-center'; // Ensure flex
+                        fileFeedback.classList.remove('hidden');
+                        nextStep1Button.disabled = false;
+                        dataPreviewContainer.classList.remove('hidden');
+                        if(previewCol3Header) previewCol3Header.classList.toggle('hidden', analysisType !== 'classification');
+                    } else {
+                        fileFeedbackText.textContent = 'Please select a valid CSV or XLSX file.';
+                        fileFeedback.className = 'feedback-message feedback-error flex items-center'; // Ensure flex
+                        fileFeedback.classList.remove('hidden');
+                        nextStep1Button.disabled = true;
+                        dataPreviewContainer.classList.add('hidden');
+                    }
+                    renderLucideIcons();
+                });
+            }
+
+            // Results Actions
+            if (copySummaryButton) {
+                copySummaryButton.addEventListener('click', () => {
+                    const publicationSummary = getElement('publication-summary');
+                    const copyFeedback = getElement('copy-feedback');
+                    navigator.clipboard.writeText(publicationSummary.textContent)
+                        .then(() => { copyFeedback.classList.remove('hidden'); setTimeout(() => { copyFeedback.classList.add('hidden'); }, 2000); })
+                        .catch(err => { console.error('Failed to copy: ', err); alert('Failed to copy summary.'); });
+                });
+            }
+             if (exportDocxButton) exportDocxButton.addEventListener('click', () => alert('DOCX export mock.'));
+             if (exportDataButton) exportDataButton.addEventListener('click', () => alert('Data export mock.'));
+             if (startOverButton) startOverButton.addEventListener('click', () => {
+                 window.location.href = "index.html"; // Link to index.html
+             });
+        }
 
 
         // --- Initial Setup for App Page ---
         function initializeAppWorkflow() {
-            populateStep2Options(); // Populate dynamic radio buttons for Step 2
-            populateStep3Options(); // Populate dynamic radio buttons for Step 3
+            populateStep2Options(); // Populate dynamic radio buttons
+            populateStep3Options(); // Populate dynamic radio buttons
+            setupEventListeners(); // Setup listeners after elements are populated/available
             updateProgress(1); // Start app workflow at step 1
-            renderLucideIcons(); // Initial render
         }
 
         // Use DOMContentLoaded which fires earlier than window.onload
