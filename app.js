@@ -241,9 +241,9 @@ dataFolderInput.addEventListener('change', async (event) => {
     categorizedFileItems = []; 
     currentAnalysisType = null; 
     processDataBtn.disabled = true; 
-    analysisTypeModal.style.display = 'none'; 
-    analyzeTimeSeriesBtn.disabled = false; 
-    analyzeSpectroscopyBtn.disabled = false; 
+    if (analysisTypeModal) analysisTypeModal.style.display = 'none'; 
+    if (analyzeTimeSeriesBtn) analyzeTimeSeriesBtn.disabled = false; 
+    if (analyzeSpectroscopyBtn) analyzeSpectroscopyBtn.disabled = false; 
 
 
     let potentialTimeSeriesFileObjects = [];
@@ -273,16 +273,16 @@ dataFolderInput.addEventListener('change', async (event) => {
 
     if (numTimeSeriesByName > 0 && numSpectroscopyByName > 0) {
         updateStep1Status(`Mixed file types detected (${numTimeSeriesByName} time-series, ${numSpectroscopyByName} spectroscopy). Please choose an analysis type.`, 'info');
-        analyzeTimeSeriesBtn.disabled = true; 
-        analysisTypeModal.style.display = 'flex'; 
+        if (analyzeTimeSeriesBtn) analyzeTimeSeriesBtn.disabled = true; 
+        if (analysisTypeModal) analysisTypeModal.style.display = 'flex'; 
     } else if (numTimeSeriesByName > 0) {
         const detectedType = await detectAnalysisType(potentialTimeSeriesFileObjects[0]);
         if (detectedType === 'time_series') {
             finalizeAndCategorizeFiles('time_series');
         } else { 
             updateStep1Status(`Ambiguous files: ${potentialTimeSeriesFileObjects[0].name} named like time-series but content suggests spectroscopy. Please choose.`, 'error');
-            analyzeTimeSeriesBtn.disabled = true; 
-            analysisTypeModal.style.display = 'flex'; 
+            if (analyzeTimeSeriesBtn) analyzeTimeSeriesBtn.disabled = true; 
+            if (analysisTypeModal) analysisTypeModal.style.display = 'flex'; 
         }
     } else if (numSpectroscopyByName > 0) {
         const detectedType = await detectAnalysisType(potentialSpectroscopyFileObjects[0]);
@@ -290,8 +290,8 @@ dataFolderInput.addEventListener('change', async (event) => {
             finalizeAndCategorizeFiles('spectroscopy');
         } else {
              updateStep1Status(`Ambiguous files: ${potentialSpectroscopyFileObjects[0].name} named like spectroscopy but content suggests time-series. Please choose.`, 'error');
-             analyzeTimeSeriesBtn.disabled = true; 
-            analysisTypeModal.style.display = 'flex'; 
+             if (analyzeTimeSeriesBtn) analyzeTimeSeriesBtn.disabled = true; 
+            if (analysisTypeModal) analysisTypeModal.style.display = 'flex'; 
         }
     } else if (firstDataFileForTypeDetection) { 
         const detectedType = await detectAnalysisType(firstDataFileForTypeDetection);
@@ -336,15 +336,15 @@ function finalizeAndCategorizeFiles(chosenType) {
             } else {
                  console.log(`Skipping file as it does not conform to strict time-series naming after normalization: ${effectiveName} (original: ${originalName})`);
             }
-
-        } else if (chosenType === 'spectroscopy') {
+        // CORRECTED BRACE PLACEMENT HERE:
+        } else if (chosenType === 'spectroscopy') { 
             const spectroscopyFormatMatch = originalName.match(/__IS_(\d{2}_\d{2}_\d{4} \d{2}_\d{2}_\d{2}(?:\.\d)?)\.csv$/i);
             if (spectroscopyFormatMatch) { 
                 itemType = 'spectroscopy';
             } else {
                 console.log(`Skipping file as it does not match spectroscopy naming pattern: ${originalName}`);
             }
-        }
+        } // This brace now correctly closes the `else if` for spectroscopy.
 
         if (itemType === chosenType) { 
             categorizedFileItems.push({
@@ -352,7 +352,7 @@ function finalizeAndCategorizeFiles(chosenType) {
                 sensorNumberRaw, sensorNumberDisplay, type: itemType
             });
         }
-    });
+    }); // End of forEach
     
     categorizedFileItems = sortFileItemsBySensorNumber(categorizedFileItems); 
 
@@ -367,15 +367,23 @@ function finalizeAndCategorizeFiles(chosenType) {
 }
 
 
-analyzeTimeSeriesBtn.addEventListener('click', () => {
-    analysisTypeModal.style.display = 'none';
-    finalizeAndCategorizeFiles('time_series');
-});
+if (analyzeTimeSeriesBtn) { 
+    analyzeTimeSeriesBtn.addEventListener('click', () => {
+        if (analysisTypeModal) analysisTypeModal.style.display = 'none';
+        finalizeAndCategorizeFiles('time_series');
+    });
+} else {
+    console.error("Button with ID 'analyze-time-series-btn' not found.");
+}
 
-analyzeSpectroscopyBtn.addEventListener('click', () => {
-    analysisTypeModal.style.display = 'none';
-    finalizeAndCategorizeFiles('spectroscopy');
-});
+if (analyzeSpectroscopyBtn) { 
+    analyzeSpectroscopyBtn.addEventListener('click', () => {
+        if (analysisTypeModal) analysisTypeModal.style.display = 'none';
+        finalizeAndCategorizeFiles('spectroscopy');
+    });
+} else {
+    console.error("Button with ID 'analyze-spectroscopy-btn' not found.");
+}
 
 
 processDataBtn.addEventListener('click', async () => {
