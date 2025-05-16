@@ -145,6 +145,11 @@ async function parseSpectroscopyFile(fileObject, passedInEffectiveName) {
     });
 }
 
+/**
+ * Processes all detected impedance spectroscopy files.
+ * @param {Array<Object>} spectroscopyFileItems - Array of {originalFile, effectiveName, originalName, type}.
+ * @returns {Promise<Array<Object>>} Processed data suitable for 3D plotting.
+ */
 async function processAllSpectroscopyFilesInternal(spectroscopyFileItems) { 
     const allProcessedData = [];
     let t0Milliseconds = null;
