@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gas Sensing Data Analysis</title>
+    <style>
+        /* General body styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Container for the main content */
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 25px 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #007bff;
+        }
+
+        /* Headings styling */
+        h1 {
+            color: #0056b3; /* A deep blue */
+            margin: 0; /* Adjusted for header-bar */
+            font-size: 1.8em;
+        }
+        h2 {
+            color: #007bff; /* A lighter, vibrant blue */
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        #about-info {
+            background-color: #e9ecef;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #ced4da;
+            font-size: 0.9em;
+            color: #495057;
+        }
+
+
+        /* Styling for each step section */
+        .step {
+            margin-bottom: 35px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        /* Form elements styling */
+        label {
+            display: block; /* Changed to block for better spacing */
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="file"] {
+            width: calc(100% - 22px); /* Full width minus padding and border */
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        input[type="file"] {
+            padding: 5px; /* Adjusted padding for file input */
+            background-color: #fdfdfd;
+        }
+
+        /* Helper text for inputs */
+        small {
+            display: block;
+            margin-top: -10px;
+            margin-bottom: 15px;
+            font-size: 0.85em;
+            color: #777;
+        }
+
+        /* Button styling */
+        button {
+            padding: 10px 18px; /* Slightly adjusted padding */
+            margin-top: 10px;
+            margin-right: 10px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.95em; /* Slightly adjusted font size */
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button:hover {
+            background-color: #0056b3;
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(0px);
+        }
+        button:disabled {
+            background-color: #b0bec5; /* A muted grey-blue */
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        #about-btn {
+            background-color: #6c757d; /* Grey for about button */
+            font-size: 0.85em;
+            padding: 8px 15px;
+        }
+        #about-btn:hover {
+            background-color: #5a6268;
+        }
+        #new-analysis-btn {
+            background-color: #28a745; /* Green for new analysis */
+        }
+        #new-analysis-btn:hover {
+            background-color: #218838;
+        }
+        #update-plot-range-btn {
+            background-color: #17a2b8; /* Info blue for update plot range */
+            margin-left: 10px;
+        }
+        #update-plot-range-btn:hover {
+            background-color: #138496;
+        }
+        #export-plots-btn {
+            background-color: #fd7e14; /* Orange for plot export */
+        }
+        #export-plots-btn:hover {
+            background-color: #e6690b;
+        }
+
+
+        /* Parameter grouping for better visual structure */
+        .parameter-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background-color: #ffffff;
+        }
+        .parameter-group label {
+            width: auto; /* Allow label to take natural width */
+            display: inline-block;
+            margin-right: 10px;
+            min-width: 430px; /* Ensure alignment, adjusted for longer labels */
+        }
+         .parameter-group input[type="text"],
+         .parameter-group input[type="number"] {
+            width: calc(100% - 450px); /* Adjust width based on label */
+            display: inline-block;
+        }
+
+        .action-buttons-group {
+            margin-bottom: 20px;
+            padding: 10px 0;
+            text-align: left; /* Align buttons to the left */
+        }
+        .plot-range-controls {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background-color: #f9f9f9;
+        }
+        .plot-range-controls label {
+            margin-right: 5px; font-weight: normal; display: inline; min-width: auto;
+        }
+        .plot-range-controls input[type="number"] {
+            width: 100px; padding: 5px; margin-right: 15px; margin-bottom:0; display:inline;
+        }
+
+
+        /* Tab navigation styling */
+        .tab-navigation {
+            margin-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+        .tab-navigation button {
+            margin-right: 8px;
+            background-color: #e9ecef;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            padding: 10px 15px;
+            font-weight: 500;
+            border-radius: 5px 5px 0 0; /* Rounded top corners */
+        }
+        .tab-navigation button.active {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            border-color: #007bff;
+            border-bottom: 2px solid #007bff; /* Match tab content border */
+        }
+
+        /* Tab content styling */
+        .tab-content {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-top: -1px; /* Overlap with tab navigation border */
+            background-color: #fff;
+            border-radius: 0 0 8px 8px; /* Rounded bottom corners */
+        }
+
+        /* Grid for charts */
+        .charts-grid {
+            display: grid;
+            gap: 25px; /* Gap between subplots */
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); /* Adjusted minmax for potentially larger 3D plots */
+        }
+        .chart-container-wrapper { /* Wrapper for each Plotly chart div */
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 10px;
+            background-color: #fdfdfd;
+            min-height: 400px; /* Ensure space for 3D plots */
+        }
+
+
+        /* Processing status message styling */
+        #processing-status-step1, #overall-progress-status { /* Combined general status styling */
+            margin-top: 20px;
+            font-weight: bold;
+            padding: 12px 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .status-info { background-color: #e6f7ff; border: 1px solid #91d5ff; color: #0050b3; }
+        .status-processing { background-color: #fffbe6; border: 1px solid #ffe58f; color: #ad8b00; }
+        .status-error { background-color: #fff1f0; border: 1px solid #ffa39e; color: #cf1322; }
+        .status-success { background-color: #f6ffed; border: 1px solid #b7eb8f; color: #389e0d; }
+
+        /* Ensure Plotly charts are responsive */
+        .js-plotly-plot .plotly .main-svg {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Progress bar and log styling */
+        #progress-bar-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        #progress-bar {
+            width: 0%; /* Initial width */
+            height: 20px;
+            background-color: #007bff;
+            border-radius: 5px;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            font-size: 0.8em;
+            transition: width 0.3s ease-out;
+        }
+        #progress-log {
+            text-align: left;
+            margin-top: 10px;
+            font-size: 0.9em;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+            white-space: pre-wrap; /* Preserve line breaks */
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-bar">
+            <h1>Gas Sensing Data Analysis</h1>
+            <button id="about-btn">About</button>
+        </div>
+        <div id="about-info" style="display:none;">
+            <p>For inquiries or additional customized functions, contact M Kilani (m.kilani@unsw.edu.au)</p>
+        </div>
+
+
+        <div id="step-upload-configure" class="step">
+            <h2>Step 1: Upload Data & Configure Analysis</h2>
+            <div class="parameter-group">
+                <label for="data-folder-input">Sensor Data Folder (select folder):</label>
+                <input type="file" id="data-folder-input" webkitdirectory directory multiple />
+                <small>Select the folder containing your sensor data files (e.g., `...__0__vs_time.csv` or `...__IS_... .csv`) and the `gas_flow_table.csv` file (if available for gas concentration analysis).</small>
+            </div>
+            
+            <h3>Configuration Parameters:</h3>
+            <div class="parameter-group">
+                <label for="experiment-name">Experiment Name:</label>
+                <input type="text" id="experiment-name" value="MyExperiment">
+                <small>Add a short name for your experiment capturing the essential information. This will be used for exported filenames.</small>
+            </div>
+             <div class="parameter-group">
+                <label for="target-gas-name">Target Gas:</label>
+                <input type="text" id="target-gas-name" value="Target Gas">
+                <small>Name of the target gas (e.g., Ammonia, CO2). This will be used in labels and headers.</small>
+            </div>
+            <div class="parameter-group">
+                <label for="gas-conc-cyl-2">Initial Target Gas Concentration (ppm):</label>
+                <input type="number" id="gas-conc-cyl-2" value="10" step="any">
+                <small>This is used if `gas_flow_table.csv` is found and processed for time-series analysis.</small>
+            </div>
+            <div class="parameter-group">
+                <label for="ref-time">Reference Time for Signal Calculation (HH:MM:SS.s from data start):</label>
+                <input type="text" id="ref-time" value="0:55:00.0" placeholder="HH:MM:SS.s">
+                <small>Time point used to calculate the reference impedance to establish the baseline for calculating the sensor signal (%). Applicable for time-series analysis.</small>
+            </div>
+            <button id="process-data-btn">Process Data</button>
+            <div id="processing-status-step1"></div> 
+        </div>
+
+        <div id="step-processing-progress" class="step" style="display:none;">
+            <h2>Step 2: Processing Progress</h2>
+            <div id="progress-bar-container">
+                <div id="progress-bar">0%</div>
+            </div>
+            <div id="progress-log"></div>
+            <div id="overall-progress-status"></div> 
+            <div id="gas-conc-profile-chart-container" class="chart-container-wrapper" style="margin-top: 20px; min-height: 300px; display:none;">
+                </div>
+        </div>
+
+
+        <div id="step3-display" class="step" style="display:none;">
+            <h2>Step 3: View Data & Export Results</h2>
+            <div class="action-buttons-group">
+                <button id="export-xlsx-btn">Export All to XLSX</button>
+                <button id="export-csv-btn">Export All to CSV</button>
+                <button id="export-plots-btn">Export All Plots to PNG</button> 
+                <button id="new-analysis-btn">Start New Analysis</button>
+            </div>
+            
+            <div id="plot-range-controls-timeseries" class="plot-range-controls" style="display:none;">
+                <label for="plot-start-time-input">Plot Start Time (min):</label>
+                <input type="number" id="plot-start-time-input" placeholder="e.g., 0" step="any">
+                <label for="plot-end-time-input">Plot End Time (min):</label>
+                <input type="number" id="plot-end-time-input" placeholder="e.g., 120" step="any">
+                <button id="update-plot-range-btn">Update Plot Range</button>
+            </div>
+
+            <div id="tabs-timeseries" class="tab-navigation" style="display:none;">
+                <button class="tab-button active" data-tab="impedance">Impedance</button>
+                <button class="tab-button" data-tab="phase">Phase</button>
+                <button class="tab-button" data-tab="signal">Signal</button>
+            </div>
+            
+            <div id="tabs-spectroscopy" class="tab-navigation" style="display:none;">
+                <button class="tab-button active" data-tab="impedance3d">3D Impedance</button>
+                <button class="tab-button" data-tab="phase3d">3D Phase</button>
+            </div>
+
+            <div id="charts-container">
+                <div id="impedance-charts" class="tab-content charts-grid" style="display:none;"></div>
+                <div id="phase-charts" class="tab-content charts-grid" style="display:none;"></div>
+                <div id="signal-charts" class="tab-content charts-grid" style="display:none;"></div>
+                
+                <div id="impedance3d-charts" class="tab-content charts-grid" style="display:none;">
+                    <div id="impedance-3d-plot-container" class="chart-container-wrapper"></div>
+                </div>
+                <div id="phase3d-charts" class="tab-content charts-grid" style="display:none;">
+                     <div id="phase-3d-plot-container" class="chart-container-wrapper"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> 
+
+
+    <script src="app.js" defer></script>
+    <script src="impedanceSpectroscopy.js" defer></script> 
+</body>
+</html>
