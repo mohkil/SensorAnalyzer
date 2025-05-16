@@ -48,6 +48,15 @@
             padding-bottom: 10px;
             border-bottom: 1px solid #e0e0e0;
         }
+         h3.plot-subtitle { /* For subtitles above 2D slice plots */
+            color: #333;
+            font-size: 1.1em;
+            margin-top: 25px; /* Increased margin for separation */
+            margin-bottom: 10px; /* Increased margin */
+            text-align: center;
+            font-weight: 600;
+        }
+
 
         #about-info {
             background-color: #e9ecef;
@@ -200,6 +209,30 @@
         .plot-range-controls input[type="number"] {
             width: 100px; padding: 5px; margin-right: 15px; margin-bottom:0; display:inline;
         }
+        .frequency-slice-selector-container { /* UPDATED */
+            margin-top: 20px; 
+            margin-bottom: 10px; 
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background-color: #f9f9f9;
+            display: none; 
+            text-align: center; /* Center the slider and its label */
+        }
+        .frequency-slice-selector-container label { /* Specific label styling for slider */
+            margin-right: 10px;
+            font-weight: normal; /* Override general label bolding */
+        }
+        #frequency-slider-impedance, #frequency-slider-phase { /* Target both sliders */
+            width: 60%; /* Adjust width as needed */
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        #selected-frequency-display-impedance, #selected-frequency-display-phase { /* Target both displays */
+            font-weight: bold;
+            display: inline-block;
+            min-width: 100px; 
+        }
 
 
         /* Tab navigation styling */
@@ -235,17 +268,30 @@
         }
 
         /* Grid for charts */
-        .charts-grid {
+        .charts-grid { /* Used for time-series plots */
             display: grid;
             gap: 25px; /* Gap between subplots */
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); /* Adjusted minmax for potentially larger 3D plots */
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); 
         }
+        .spectroscopy-plot-area .chart-container-wrapper { /* For 3D plot */
+            width: 100%; /* Ensure 3D plot takes full width */
+            margin-bottom: 15px;
+        }
+        .spectroscopy-plot-area .slice-plot-group { /* Group for slider, title, 2D plot */
+            width: 100%;
+        }
+
+
         .chart-container-wrapper { /* Wrapper for each Plotly chart div */
             border: 1px solid #e0e0e0;
             border-radius: 6px;
             padding: 10px;
             background-color: #fdfdfd;
             min-height: 400px; /* Ensure space for 3D plots */
+        }
+        .slice-plot-container { /* For 2D slice plots */
+             min-height: 350px; /* Standard 2D plot height */
+             margin-top: 0px; /* Reduced margin as title is separate */
         }
 
 
@@ -299,6 +345,39 @@
             white-space: pre-wrap; /* Preserve line breaks */
         }
 
+        /* Modal Styling */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* Ensure it's on top */
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 25px 30px;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+            text-align: center;
+            min-width: 300px;
+            max-width: 500px;
+        }
+        .modal-content h3 {
+            margin-top: 0;
+            color: #0056b3;
+        }
+        .modal-content p {
+            margin-bottom: 20px;
+        }
+        .modal-buttons button {
+            margin: 5px;
+        }
+
 
     </style>
 </head>
@@ -309,7 +388,18 @@
             <button id="about-btn">About</button>
         </div>
         <div id="about-info" style="display:none;">
-            <!-- <p>For inquiries or additional customized functions, contact M Kilani (m.kilani@unsw.edu.au)</p> -->
+            <p>For inquiries or additional customized functions, contact M Kilani (m.kilani@unsw.edu.au)</p>
+        </div>
+
+        <div id="analysis-type-modal" class="modal-overlay" style="display:none;">
+            <div class="modal-content">
+                <h3>Analysis Type Detected</h3>
+                <p>Both Time-Series and Impedance Spectroscopy data files were detected in the selected folder. Please choose which type of analysis you would like to perform:</p>
+                <div class="modal-buttons">
+                    <button id="analyze-time-series-btn">Analyze Time-Series Data</button>
+                    <button id="analyze-spectroscopy-btn">Analyze Spectroscopy Data</button>
+                </div>
+            </div>
         </div>
 
 
@@ -391,11 +481,25 @@
                 <div id="phase-charts" class="tab-content charts-grid" style="display:none;"></div>
                 <div id="signal-charts" class="tab-content charts-grid" style="display:none;"></div>
                 
-                <div id="impedance3d-charts" class="tab-content charts-grid" style="display:none;">
+                <div id="impedance3d-charts" class="tab-content spectroscopy-plot-area" style="display:none;"> 
                     <div id="impedance-3d-plot-container" class="chart-container-wrapper"></div>
+                    <div id="frequency-slice-selector-container-impedance" class="frequency-slice-selector-container"> 
+                        <label for="frequency-slider-impedance">Select Frequency for 2D Slice Plot:</label>
+                        <input type="range" id="frequency-slider-impedance" min="0" max="100" value="0">
+                        <span id="selected-frequency-display-impedance">N/A</span>
+                    </div>
+                    <h3 class="plot-subtitle">Impedance vs. Time at Selected Frequency</h3>
+                    <div id="impedance-2d-slice-plot-container" class="chart-container-wrapper slice-plot-container"></div>
                 </div>
-                <div id="phase3d-charts" class="tab-content charts-grid" style="display:none;">
+                <div id="phase3d-charts" class="tab-content spectroscopy-plot-area" style="display:none;"> 
                      <div id="phase-3d-plot-container" class="chart-container-wrapper"></div>
+                     <div id="frequency-slice-selector-container-phase" class="frequency-slice-selector-container"> 
+                        <label for="frequency-slider-phase">Select Frequency for 2D Slice Plot:</label>
+                        <input type="range" id="frequency-slider-phase" min="0" max="100" value="0">
+                        <span id="selected-frequency-display-phase">N/A</span>
+                    </div>
+                     <h3 class="plot-subtitle">Phase vs. Time at Selected Frequency</h3>
+                     <div id="phase-2d-slice-plot-container" class="chart-container-wrapper slice-plot-container"></div>
                 </div>
             </div>
         </div>
@@ -407,7 +511,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> 
 
 
-    <script src="app.js" defer></script>
     <script src="impedanceSpectroscopy.js" defer></script> 
+    <script src="multisensor.js" defer></script>
+    <script src="app.js" defer></script>
 </body>
 </html>
